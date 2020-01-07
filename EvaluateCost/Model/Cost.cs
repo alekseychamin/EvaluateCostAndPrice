@@ -157,6 +157,7 @@ namespace EvaluateCost
 
             this.price.Tax = this.PriceValues.WithNoTax * this.CostTax;
             this.price.WithTax = this.PriceValues.WithNoTax + this.PriceValues.Tax;
+            this.price.Currency = this.Currency;
         }
 
         protected virtual void IsValidDoubleValue(double? value, String paramName)
@@ -205,11 +206,13 @@ namespace EvaluateCost
             if (!koef.HasValue)
                 koef = 1;
 
+            cost.Currency = this.Currency;
+
             if (unitNoTaxCost.HasValue)
             {
                 cost.WithNoTax = count * unitNoTaxCost * koef;
                 cost.Tax = cost.WithNoTax * costTax;
-                cost.WithTax = cost.WithNoTax + cost.Tax;
+                cost.WithTax = cost.WithNoTax + cost.Tax;                
             }
             else if (unitTaxCost.HasValue)
             {

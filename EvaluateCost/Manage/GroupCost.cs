@@ -139,6 +139,7 @@ namespace EvaluateCost
                     cost.Tax += item.PriceValues.Tax;
                     cost.WithNoTax += item.PriceValues.WithNoTax;
                     cost.WithTax += item.PriceValues.WithTax;
+                    cost.Currency = item.Currency;
                     priceValuesByType[item.TypeEnumObject] = cost;
                 }
                 else
@@ -151,12 +152,14 @@ namespace EvaluateCost
             cost.Tax = 0;
             cost.WithNoTax = 0;
             cost.WithTax = 0;
+            cost.Currency = TypeCurrency.None;
 
             foreach (var item in listCost)
             {
                 cost.Tax += item.CostValues.Tax;
                 cost.WithTax += item.CostValues.WithTax;
                 cost.WithNoTax += item.CostValues.WithNoTax;
+                cost.Currency = item.Currency;
             }
         }
 
@@ -172,6 +175,7 @@ namespace EvaluateCost
                     cost.Tax += item.CostValues.Tax;
                     cost.WithNoTax += item.CostValues.WithNoTax;
                     cost.WithTax += item.CostValues.WithTax;
+                    cost.Currency = item.Currency;
                     costValuesByType[item.TypeEnumObject] = cost;
                 }
                 else
