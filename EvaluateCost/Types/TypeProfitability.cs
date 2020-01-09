@@ -9,6 +9,7 @@ namespace EvaluateCost
     class Profitability : IGetTypeEnumObject<TypeProfitability>, IGetTypeObject
     {
         public string Name { get; set; }
+        public TypeCost TypeCost { get; set; }
         public double? Value { get; set; }
         public TypeProfitability TypeEnumObject { get; set; }
         public Func<Enum, string> GetTypeObject { get; set; }

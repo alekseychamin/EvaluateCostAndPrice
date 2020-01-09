@@ -10,7 +10,7 @@ namespace EvaluateCost
     /// <summary>
     /// класс для описания абстрактной затраты
     /// </summary>
-    abstract class Cost : IGetTypeEnumObject<TypeCost>, 
+    abstract class Cost : IGetTypeEnumObject<TypeCost>,
                           IChangeValue, IGetTypeObject,
                           ITax, ICPValues, IGetPValuesByType
     {
@@ -40,9 +40,13 @@ namespace EvaluateCost
         // региональный коэффициент, учет скидки на материалы, ставка налога для ФОТ
         protected double? koef = 1;
 
+        // количество человек
+        protected double? countHuman = 1;
+
         public Values CostValues => cost;
         public Values PriceValues => price;
         public virtual string Name { get; set; }
+        public double? CountHuman { get => countHuman; set => countHuman = value; }
         public double? UnitTaxCost
         {
             get => unitTaxCost;
@@ -146,8 +150,8 @@ namespace EvaluateCost
                 {
                     foreach (var prof in listProf)
                     {
-                        string nameTypeCost = TypeObject.GetTypeObject(this.TypeEnumObject);
-                        if (nameTypeCost == prof.Name)
+                        //string nameTypeCost = TypeObject.GetTypeObject(this.TypeEnumObject);
+                        if (this.TypeEnumObject == prof.TypeCost)
                         {
                             this.price.WithNoTax = this.CostValues.WithNoTax / (1 - prof.Value);
                         }
@@ -210,13 +214,13 @@ namespace EvaluateCost
 
             if (unitNoTaxCost.HasValue)
             {
-                cost.WithNoTax = count * unitNoTaxCost * koef;
+                cost.WithNoTax = count * unitNoTaxCost * koef * countHuman;
                 cost.Tax = cost.WithNoTax * costTax;
                 cost.WithTax = cost.WithNoTax + cost.Tax;                
             }
             else if (unitTaxCost.HasValue)
             {
-                cost.WithTax = count * unitTaxCost * koef;
+                cost.WithTax = count * unitTaxCost * koef * countHuman;
                 cost.Tax = (cost.WithTax * costTax) / (1 + costTax);
                 cost.WithNoTax = cost.WithTax - cost.Tax;
             }

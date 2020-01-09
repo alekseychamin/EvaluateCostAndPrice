@@ -80,7 +80,15 @@ namespace EvaluateCost
                 project.GetCostValuesByType();
             }
         }
-
+        // TODO добавить алгоритм расчета фактической рентабельности проекта равной заданной                       
+        public void GetPriceWithProfProject()
+        {
+            foreach (var project in listProject)
+                project.GetPriceWithProf();
+        }        
+        /// <summary>
+        /// Метод расчета цены проекта на основе заданных коэффициентов рентабельности по типам затрат
+        /// </summary>
         public void GetPriceValues()
         {
             foreach (var project in listProject)

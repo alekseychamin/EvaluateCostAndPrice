@@ -250,8 +250,10 @@ namespace EvaluateCost
             Console.WriteLine($"Рентабельность фактическая: {KoefCalcProf * 100:0} %");
             Console.WriteLine($"Общая стоимость без НДС: {CostValues.WithNoTax:N} {Currency}\n" +
                               $"НДС: {CostValues.Tax:N} {Currency}\n" +
-                              $"Общая стоимость с НДС: {CostValues.WithTax:N} {Currency}");
-
+                              $"Общая стоимость с НДС: {CostValues.WithTax:N} {Currency}\n");
+            Console.WriteLine($"Общая цена без НДС: {PriceValues.WithNoTax:N} {Currency}\n" +
+                              $"НДС: {PriceValues.Tax:N} {Currency}\n" +
+                              $"Общая цена с НДС: {PriceValues.WithTax:N} {Currency}");
             //foreach (var item in costValuesByType)
             //{
             //    Console.WriteLine();

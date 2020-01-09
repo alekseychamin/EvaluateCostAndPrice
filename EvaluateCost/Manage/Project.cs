@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace EvaluateCost
 {
-    class Project : IGetTypeObject, IGetTypeEnumObject<TypeProject>, 
+    class Project : IGetTypeObject, IGetTypeEnumObject<TypeProject>,
                     IGetCValuesByType, ISetCurrency, IGetKprofByType,
                     ISetTax, ITax, ICPValues, IGetPValuesByType
     {
         private List<GroupCost> listNameGroupCost = new List<GroupCost>();
         private List<Profitability> listProfitability = new List<Profitability>();
+        private List<Profitability> listEvaluateProf = new List<Profitability>();
         private Dictionary<TypeCost, Values> costValuesByType = new Dictionary<TypeCost, Values>();
         private Dictionary<TypeCost, Values> priceValuesByType = new Dictionary<TypeCost, Values>();
         private Dictionary<TypeCost, double?> kprof = new Dictionary<TypeCost, double?>();
@@ -26,6 +27,8 @@ namespace EvaluateCost
         public string ProjectFolder { get; set; }
         public TypeProject TypeEnumObject { get; set; }
         public Func<Enum, string> GetTypeObject { get; set; }
+        public List<Profitability> ListEvaluateProf { get => listEvaluateProf; }
+        public List<Profitability> ListProfitability { get => listProfitability; }
         public double? CostTax
         {
             get => costTax;
@@ -74,6 +77,20 @@ namespace EvaluateCost
         //    listToAdd.AddRange(listT);
         //}        
 
+        public void GetPriceWithProf()
+        {
+            InitListProf();
+            bool done = false;
+
+            while (!done)
+            {
+                GetPriceValues(listEvaluateProf);
+                GetPriceValuesByType();
+                GetKprofByType();
+                done = SetStepToListProf(0.01);
+            }
+        }
+
         public void GetPriceValues(List<Profitability> listProf = null)
         {
             price.Tax = 0;
@@ -83,22 +100,70 @@ namespace EvaluateCost
 
             foreach (var group in listNameGroupCost)
             {
-                group.GetPriceValues(listProfitability);
+                if (listProf == null)
+                    group.GetPriceValues(listProfitability);
+                else
+                    group.GetPriceValues(listProf);
 
                 price.Tax += group.PriceValues.Tax;
                 price.WithTax += group.PriceValues.WithTax;
                 price.WithNoTax += group.PriceValues.WithNoTax;
                 price.Currency = group.Currency;
             }
+
+        }
+
+        private void InitListProf()
+        {
+            listEvaluateProf.Clear();
             
+            foreach (var item in listProfitability)
+            {
+                Profitability prof = new Profitability
+                {
+                    Name = item.Name,
+                    TypeCost = item.TypeCost,
+                    TypeEnumObject = item.TypeEnumObject,
+                    GetTypeObject = item.GetTypeObject,
+                    Value = 0
+                };
+                listEvaluateProf.Add(prof);
+            }
+
+        }
+
+        private bool SetStepToListProf(double step)
+        {            
+            int count = 0;
+
+            foreach (var key in kprof.Keys)
+            {
+                var profValue = (listProfitability.Find(x => x.TypeCost == key));
+                var evalProf = (listEvaluateProf.Find(x => x.TypeCost == key));
+
+                if (profValue != null && evalProf != null)
+                {
+                    if (evalProf.Value + step <= profValue.Value)
+                        evalProf.Value += step;
+                    else
+                        count++;
+                }
+            }
+
+            if ((count == listEvaluateProf.Count) || (KoefCalcProf >= Kprofitability))
+                return true;
+            else
+                return false;            
         }
 
         public void GetKprofByType()
         {
+            kprof.Clear();
+
             foreach (var item in CostValuesByType.Keys)
             {
                 double? k = null;
-                if (PriceValuesByType[item].WithNoTax.HasValue && PriceValuesByType[item].WithNoTax != 0) 
+                if (PriceValuesByType[item].WithNoTax.HasValue && PriceValuesByType[item].WithNoTax != 0)
                     k = (PriceValuesByType[item].WithNoTax - CostValuesByType[item].WithNoTax) / PriceValuesByType[item].WithNoTax;
 
                 kprof.Add(item, k);
@@ -144,7 +209,7 @@ namespace EvaluateCost
                 cost.WithTax += item.CostValues.WithTax;
                 cost.WithNoTax += item.CostValues.WithNoTax;
                 cost.Currency = item.Currency;
-            }            
+            }
         }
 
         public void GetCostValuesByType()
@@ -209,7 +274,10 @@ namespace EvaluateCost
             Console.WriteLine($"Соц. налог %: {SocialTax * 100} %");
             Console.WriteLine($"Общая стоимость без НДС: {CostValues.WithNoTax:N} {CostValues.Currency}\n" +
                               $"НДС: {CostValues.Tax:N} {CostValues.Currency}\n" +
-                              $"Общая стоимость с НДС: {CostValues.WithTax:N} {CostValues.Currency}");
+                              $"Общая стоимость с НДС: {CostValues.WithTax:N} {CostValues.Currency}\n");
+            Console.WriteLine($"Общая цена без НДС: {PriceValues.WithNoTax:N} {PriceValues.Currency}\n" +
+                              $"НДС: {PriceValues.Tax:N} {PriceValues.Currency}\n" +
+                              $"Общая цена с НДС: {PriceValues.WithTax:N} {PriceValues.Currency}");
             Console.WriteLine(new string('-', 50));
 
             foreach (var item in CostValuesByType.Keys)
@@ -275,9 +343,28 @@ namespace EvaluateCost
             }
         }
 
+        private void AddTypeCostToListProf(List<Profitability> listProf)
+        {
+            foreach (var item in listProf)
+            {
+                try
+                {
+                    TypeCost typeCost = (TypeCost)TypeObject.GetTypeObject(item.Name);
+                    item.TypeCost = typeCost;
+                }
+                catch (InvalidCastException)
+                {
+                    Exception ex = new InvalidCastException($"Неверное задание типа затрат в файле {this.FileNameProf}");
+                    //throw;
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
+
         public void LoadProjectProfitability()
         {
-            ReadFile.Load<Profitability>(this.FileNameProf, listProfitability, this.ProjectFolder);            
+            ReadFile.Load<Profitability>(this.FileNameProf, listProfitability, this.ProjectFolder);
+            AddTypeCostToListProf(listProfitability);
         }
 
         //public void LoadListProfitability(string filename, string folder)
@@ -301,8 +388,8 @@ namespace EvaluateCost
         {
             string projectFileName = folder + "\\" + filename;
             var gc = listNameGroupCost.Find(x => x.Name.Equals(nameGroup));
-            if (gc != null)                            
-                gc.LoadCost(projectFileName);            
+            if (gc != null)
+                gc.LoadCost(projectFileName);
             else
                 Console.WriteLine($"Центр затрат с именем {nameGroup} не существует.");
         }
@@ -310,11 +397,11 @@ namespace EvaluateCost
                                    String nameCost, double unitCost, TypeCurrency typeCurrency, double count)
         {
             var gc = listNameGroupCost.Find(x => x.Name.Equals(nameGroup));
-            if (gc != null)                            
-                gc.AddCost(typeCost, nameCost, unitCost, typeCurrency, count);            
+            if (gc != null)
+                gc.AddCost(typeCost, nameCost, unitCost, typeCurrency, count);
             else
                 Console.WriteLine($"Центр затрат с именем {nameGroup} не существует.");
         }
-        
+
     }
 }

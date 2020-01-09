@@ -69,6 +69,7 @@ namespace EvaluateCost
           { "Стоимость часа без НДС", "UnitNoTaxCost" },
           { "Валюта", "Currency" },
           { "Кол-во ед.", "Count" },
+          { "Кол-во чел.", "CountHuman" },
           { "Кол-во часов", "Count" },
           { "Часть системы", "PartSystem" },
           { "Комментарий", "Comment" },
