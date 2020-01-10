@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace EvaluateCost
 {
+    class StringProperty<T>
+    {
+        T Value { get; set; }
+        public string Name { get; set; }
+    }
     /// <summary>
     /// класс для описания абстрактной затраты
     /// </summary>
@@ -34,7 +39,7 @@ namespace EvaluateCost
         // поле количество затраты
         protected double? count;
         // поле для указания части системы (при расчете стоимости аналогично сводным таблицам)
-        protected string partSystem;
+        protected StringProperty<string> partSystem;
         // поле для указания комментария
         protected string comment;
         // региональный коэффициент, учет скидки на материалы, ставка налога для ФОТ
@@ -111,7 +116,7 @@ namespace EvaluateCost
         }
         public virtual TypeCurrency Currency { get => currency; set => currency = value; }
         public virtual string Comment { get => comment; set => comment = value; }
-        public virtual string PartSystem { get => partSystem; set => partSystem = value; }
+        public virtual StringProperty<string> PartSystem { get => partSystem; set => partSystem = value; }
         public TypeCost TypeEnumObject { get => typeCost; set => typeCost = value; }
         public double? Koef { get => koef; set => koef = value; }
         public Func<Enum, string> GetTypeObject { get; set; }

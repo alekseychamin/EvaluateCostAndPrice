@@ -18,7 +18,7 @@ namespace EvaluateCost
             }
         }
 
-        public override string PartSystem
+        public override StringProperty<string> PartSystem
         {
             get
             {
