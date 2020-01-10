@@ -9,7 +9,7 @@ namespace EvaluateCost
     /// <summary>
     /// Перечисление для указания типа затрат 
     /// </summary>
-    enum TypeCost { Work, Tax, Material, Other };
+    enum TypeCost { Work, Tax, Material, Other, Service };
 
     /// <summary>
     /// структура для хранения типа объекта GetType() и наименования типа затраты для UI

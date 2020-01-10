@@ -210,6 +210,9 @@ namespace EvaluateCost
             if (!koef.HasValue)
                 koef = 1;
 
+            if (!countHuman.HasValue)
+                countHuman = 1;
+
             cost.Currency = this.Currency;
 
             if (unitNoTaxCost.HasValue)
@@ -229,6 +232,20 @@ namespace EvaluateCost
         public void GetPriceValuesByType()
         {
             priceValuesByType.Add(this.TypeEnumObject, price);
+        }
+
+        public static string ShowCostValues(Values values)
+        {
+            return string.Format($"Себестоимость без НДС: {values.WithNoTax:N} {values.Currency}\n" +
+                                 $"НДС: {values.Tax:N} {values.Currency}\n" +
+                                 $"Себестоимость с НДС: {values.WithTax:N} {values.Currency}\n");             
+        }
+
+        public static string ShowPriceValues(Values values)
+        {
+            return string.Format($"Цена без НДС: {values.WithNoTax:N} {values.Currency}\n" +
+                                 $"НДС: {values.Tax:N} {values.Currency}\n" +
+                                 $"Цена с НДС: {values.WithTax:N} {values.Currency}\n");            
         }
     }
 }

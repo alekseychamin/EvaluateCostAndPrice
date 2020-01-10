@@ -180,29 +180,7 @@ namespace EvaluateCost
                 }
                 else
                     costValuesByType.Add(item.TypeEnumObject, item.CostValues);
-            }
-
-            //foreach (TypeCost typeCost in Enum.GetValues(typeof(TypeCost)))
-            //{
-            //    Values costBN;
-            //    costBN.WithNoTax = 0;
-            //    costBN.WithTax = 0;
-            //    costBN.Tax = 0;
-            //    costBN.Currency = this.Currency;
-
-            //    bool isExist = false;
-            //    foreach (Cost cost in listCost)
-            //    {
-            //        if (cost.TypeEnumObject == typeCost)
-            //        {
-            //            isExist = true;
-            //            costBN.WithNoTax += cost.CostValues.WithNoTax;
-            //            costBN.Tax += cost.CostValues.Tax;
-            //            costBN.WithTax += cost.CostValues.WithTax;
-            //        }
-            //    }
-            //    if (isExist) costValuesByType.Add(typeCost, costBN);
-            //}
+            }           
         }
 
         public void EvaluateCost()

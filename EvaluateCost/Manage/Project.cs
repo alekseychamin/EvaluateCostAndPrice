@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace EvaluateCost
-{
+{    
     class Project : IGetTypeObject, IGetTypeEnumObject<TypeProject>,
                     IGetCValuesByType, ISetCurrency, IGetKprofByType,
                     ISetTax, ITax, ICPValues, IGetPValuesByType
@@ -15,20 +16,35 @@ namespace EvaluateCost
         private List<Profitability> listEvaluateProf = new List<Profitability>();
         private Dictionary<TypeCost, Values> costValuesByType = new Dictionary<TypeCost, Values>();
         private Dictionary<TypeCost, Values> priceValuesByType = new Dictionary<TypeCost, Values>();
-        private Dictionary<TypeCost, double?> kprof = new Dictionary<TypeCost, double?>();
+        private Dictionary<TypeCost, double?> kprof = new Dictionary<TypeCost, double?>();        
+        private Dictionary<string, Dictionary<TypeCost, Values>> costValuesByCommentType = 
+                                                                    new Dictionary<string, Dictionary<TypeCost, Values>>();
+        private Dictionary<string, Dictionary<TypeCost, Values>> priceValuesByCommentType = 
+                                                                    new Dictionary<string, Dictionary<TypeCost, Values>>();
+        private Dictionary<string, Values> costValuesByComment = new Dictionary<string, Values>();
+        private Dictionary<string, Values> priceValuesByComment = new Dictionary<string, Values>();
+        private Report report;
+
         private double? costTax;
         private double? socialTax;
         private Values cost;
         private Values price;
-
+        
         public string Name { get; set; }
         public string FileNameCost { get; set; }
         public string FileNameProf { get; set; }
         public string ProjectFolder { get; set; }
         public TypeProject TypeEnumObject { get; set; }
+        public List<GroupCost> ListNameGroupCost { get => listNameGroupCost; }
         public Func<Enum, string> GetTypeObject { get; set; }
         public List<Profitability> ListEvaluateProf { get => listEvaluateProf; }
         public List<Profitability> ListProfitability { get => listProfitability; }
+        public Dictionary<string, Dictionary<TypeCost, Values>> CostValuesByCommentType { get => costValuesByCommentType; }
+        public Dictionary<string, Dictionary<TypeCost, Values>> PriceValuesByCommentType { get => priceValuesByCommentType; }
+        public Dictionary<string, Values> CostValuesByComment { get => costValuesByComment; }
+        public Dictionary<string, Values> PriceValuesByComment { get => priceValuesByComment; }
+        public Report Report { get => report; }
+
         public double? CostTax
         {
             get => costTax;
@@ -68,15 +84,11 @@ namespace EvaluateCost
         public double? Kprofitability { get; set; }
         public Dictionary<TypeCost, double?> Kprof => kprof;
 
-        //public void Load<T>(string filename, string folder, List<T> listToAdd) where T : IGetTypeObject
-        //{
-        //    listToAdd.Clear();
-        //    string projectFileName = folder + "\\" + filename;
-        //    List<T> listT = new List<T>();
-        //    listT = ReadFile.GetObjects<T>(projectFileName, Properties.Value);
-        //    listToAdd.AddRange(listT);
-        //}        
-
+        public Project()
+        {
+            report = new Report(this);
+        }
+        
         public void GetPriceWithProf()
         {
             InitListProf();
@@ -88,6 +100,23 @@ namespace EvaluateCost
                 GetPriceValuesByType();
                 GetKprofByType();
                 done = SetStepToListProf(0.01);
+            }
+        }
+        public void GetCostValues()
+        {
+            cost.Tax = 0;
+            cost.WithNoTax = 0;
+            cost.WithTax = 0;
+            cost.Currency = TypeCurrency.None;
+
+            foreach (var group in listNameGroupCost)
+            {
+                group.GetCostValues();
+
+                cost.Tax += group.CostValues.Tax;
+                cost.WithTax += group.CostValues.WithTax;
+                cost.WithNoTax += group.CostValues.WithNoTax;
+                cost.Currency = group.Currency;
             }
         }
 
@@ -169,6 +198,76 @@ namespace EvaluateCost
                 kprof.Add(item, k);
             }
         }
+
+        private void AddValues(Dictionary<string, Dictionary<TypeCost, Values>> valuesByCommentType,                               
+                               Values costValues, Cost cost, TypeCurrency currency)
+        {
+            if (valuesByCommentType.ContainsKey(cost.Comment))
+            {
+                if (valuesByCommentType[cost.Comment].ContainsKey(cost.TypeEnumObject))
+                {
+                    Values values = valuesByCommentType[cost.Comment][cost.TypeEnumObject];
+                    values.WithNoTax += costValues.WithNoTax;
+                    values.WithTax += costValues.WithTax;
+                    values.Tax += costValues.Tax;
+                    values.Currency = currency;
+                    valuesByCommentType[cost.Comment][cost.TypeEnumObject] = values;
+                }
+                else
+                {
+                    Values values = costValues;
+                    values.Currency = currency;
+                    valuesByCommentType[cost.Comment].Add(cost.TypeEnumObject, values);
+                }
+            }
+            else
+            {
+                Values values = costValues;
+                values.Currency = currency;
+                valuesByCommentType.Add(cost.Comment, new Dictionary<TypeCost, Values>());
+                valuesByCommentType[cost.Comment].Add(cost.TypeEnumObject, values);
+            }           
+        }
+
+        private void GetCostPriceValuesByCommentType()
+        {            
+            foreach (var group in listNameGroupCost)
+            {
+                foreach (var cost in group.ListCost)
+                {
+                    AddValues(costValuesByCommentType, cost.CostValues, cost, group.Currency);
+                    AddValues(priceValuesByCommentType, cost.PriceValues, cost, group.Currency);
+                }
+            }
+        }
+
+        private void GetValuesByComment(Dictionary<string, Values> valuesComment, 
+                                        Dictionary<string, Dictionary<TypeCost, Values>> valuesCommentType)
+        {
+            foreach (var keyName in valuesCommentType.Keys)
+            {
+                Values values;
+                values.WithNoTax = 0;
+                values.WithTax = 0;
+                values.Tax = 0;
+                values.Currency = TypeCurrency.None;
+                foreach (var keyType in valuesCommentType[keyName].Keys)
+                {
+                    values.Currency = valuesCommentType[keyName][keyType].Currency;
+                    values.WithNoTax += valuesCommentType[keyName][keyType].WithNoTax;
+                    values.WithTax += valuesCommentType[keyName][keyType].WithTax;
+                    values.Tax += valuesCommentType[keyName][keyType].Tax;
+                }
+                valuesComment.Add(keyName, values);
+            }
+        }
+        public void GetCostPriceValuesByComment()
+        {
+            GetCostPriceValuesByCommentType();
+            GetValuesByComment(costValuesByComment, costValuesByCommentType);
+            GetValuesByComment(priceValuesByComment, priceValuesByCommentType);
+        }
+
         public void GetPriceValuesByType()
         {
             priceValuesByType.Clear();
@@ -192,25 +291,7 @@ namespace EvaluateCost
                         priceValuesByType.Add(item.Key, item.Value);
                 }
             }
-        }
-
-        public void GetCostValues()
-        {
-            cost.Tax = 0;
-            cost.WithNoTax = 0;
-            cost.WithTax = 0;
-            cost.Currency = TypeCurrency.None;
-
-            foreach (var item in listNameGroupCost)
-            {
-                item.GetCostValues();
-
-                cost.Tax += item.CostValues.Tax;
-                cost.WithTax += item.CostValues.WithTax;
-                cost.WithNoTax += item.CostValues.WithNoTax;
-                cost.Currency = item.Currency;
-            }
-        }
+        }        
 
         public void GetCostValuesByType()
         {
@@ -234,72 +315,8 @@ namespace EvaluateCost
                     else
                         costValuesByType.Add(item.Key, item.Value);
                 }
-            }
-
-            //foreach (TypeCost typeCost in Enum.GetValues(typeof(TypeCost)))
-            //{
-            //    Values costBN;
-            //    costBN.WithNoTax = 0;
-            //    costBN.WithTax = 0;
-            //    costBN.Tax = 0;
-            //    costBN.Currency = TypeCurrency.None;
-
-            //    bool isExist = false;
-            //    foreach (GroupCost groupCost in listNameGroupCost)
-            //    {
-            //        if (groupCost.CostValuesByType.ContainsKey(typeCost))
-            //        {
-            //            isExist = true;
-            //            costBN.WithNoTax += groupCost.CostValuesByType[typeCost].WithNoTax;
-            //            costBN.Tax += groupCost.CostValuesByType[typeCost].Tax;
-            //            costBN.WithTax += groupCost.CostValuesByType[typeCost].WithTax;
-            //            costBN.Currency = groupCost.CostValuesByType[typeCost].Currency;
-            //        }
-            //    }
-            //    if (isExist) costValuesByType.Add(typeCost, costBN);
-            //}
-        }
-
-        public void ShowCost()
-        {
-            //foreach (var item in listProfitability)
-            //{
-            //    Console.WriteLine($"{item.Name} = {item.Value * 100} %");
-            //}            
-
-            Console.WriteLine(this.Name);
-            Console.WriteLine($"Рентабельность заданная: {Kprofitability * 100} %");
-            Console.WriteLine($"Рентабельность фактическая: {KoefCalcProf * 100:0} %");
-            Console.WriteLine($"НДС %: {CostTax * 100} %");
-            Console.WriteLine($"Соц. налог %: {SocialTax * 100} %");
-            Console.WriteLine($"Общая стоимость без НДС: {CostValues.WithNoTax:N} {CostValues.Currency}\n" +
-                              $"НДС: {CostValues.Tax:N} {CostValues.Currency}\n" +
-                              $"Общая стоимость с НДС: {CostValues.WithTax:N} {CostValues.Currency}\n");
-            Console.WriteLine($"Общая цена без НДС: {PriceValues.WithNoTax:N} {PriceValues.Currency}\n" +
-                              $"НДС: {PriceValues.Tax:N} {PriceValues.Currency}\n" +
-                              $"Общая цена с НДС: {PriceValues.WithTax:N} {PriceValues.Currency}");
-            Console.WriteLine(new string('-', 50));
-
-            foreach (var item in CostValuesByType.Keys)
-            {
-                Console.WriteLine($"Наименование типа затрат: {TypeObject.GetTypeObject(item)}");
-                Console.WriteLine($"Стоимость без НДС: {CostValuesByType[item].WithNoTax:N} {CostValuesByType[item].Currency}");
-                Console.WriteLine($"НДС: {CostValuesByType[item].Tax:N} {CostValuesByType[item].Currency}");
-                Console.WriteLine($"Стоимость с НДС: {CostValuesByType[item].WithTax:N} {CostValuesByType[item].Currency}");
-                Console.WriteLine();
-                Console.WriteLine($"Рентабельность фактическая: {Kprof[item] * 100:0} %");
-                Console.WriteLine($"Цена без НДС: {PriceValuesByType[item].WithNoTax:N} {PriceValuesByType[item].Currency}");
-                Console.WriteLine($"НДС: {PriceValuesByType[item].Tax:N} {PriceValuesByType[item].Currency}");
-                Console.WriteLine($"Цена с НДС: {PriceValuesByType[item].WithTax:N} {PriceValuesByType[item].Currency}");
-                Console.WriteLine();
-            }
-            Console.WriteLine(new string('-', 50));
-            foreach (var group in listNameGroupCost)
-            {
-                group.ShowCost();
-                Console.WriteLine(new string('-', 50));
-            }
-        }
+            }            
+        }                                               
 
         public void SetTax()
         {
@@ -329,18 +346,11 @@ namespace EvaluateCost
         }
 
         public void LoadGroupCost(string filename)
-        {
-            //listNameGroupCost.Clear();
-            //string projectFileName = folder + "\\" + filename;
-            //List<GroupCost> listT = new List<GroupCost>();
-            //listT = ReadFile.GetObjects<GroupCost>(projectFileName, Properties.Value);
-            //listNameGroupCost.AddRange(listT);
+        {            
             ReadFile.Load<GroupCost>(filename, listNameGroupCost, this.ProjectFolder);
-            foreach (var item in listNameGroupCost)
-            {
-                //item.CostTax = this.CostTax;
+            foreach (var item in listNameGroupCost)                           
                 LoadCostInGroup(item.Name, item.FileNameCost, this.ProjectFolder);
-            }
+            
         }
 
         private void AddTypeCostToListProf(List<Profitability> listProf)
@@ -365,13 +375,7 @@ namespace EvaluateCost
         {
             ReadFile.Load<Profitability>(this.FileNameProf, listProfitability, this.ProjectFolder);
             AddTypeCostToListProf(listProfitability);
-        }
-
-        //public void LoadListProfitability(string filename, string folder)
-        //{
-        //    listProfitability.Clear();
-        //    string projectFileName = folder + "\\" + filename;
-        //}
+        }        
 
         public void AddGroupCost(String nameGroup)
         {
@@ -403,5 +407,11 @@ namespace EvaluateCost
                 Console.WriteLine($"Центр затрат с именем {nameGroup} не существует.");
         }
 
+        public void ShowCost()
+        {
+            report.MakeFinancialReport();
+            report.SaveReport();
+            report.Show();
+        }
     }
 }

@@ -22,6 +22,7 @@ namespace EvaluateCost
                 manager.GetCostValues();
                 //manager.GetPriceValues();
                 manager.GetPriceWithProfProject();
+                manager.GetCostPriceValuesByComment();
 
                 manager.ShowCost();
             }

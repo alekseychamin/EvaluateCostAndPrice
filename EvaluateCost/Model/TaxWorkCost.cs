@@ -69,10 +69,8 @@ namespace EvaluateCost
         {
             return String.Format($"Тип затраты: {this.GetTypeObject(TypeEnumObject)}\n" +
                                  $"Имя затраты: {Name}\n" +                                 
-                                 $"Ставка налога: {Koef}\n" +                                 
-                                 $"Общая стоимость без НДС: {CostValues.WithNoTax:N} {Currency}\n" +
-                                 $"НДС: {CostValues.Tax:N} {Currency}\n" +
-                                 $"Общая стоимость с НДС: {CostValues.WithTax:N} {Currency}");
+                                 $"Ставка налога: {Koef}\n") +
+                                 Cost.ShowCostValues(this.CostValues);
         }
     }
 }

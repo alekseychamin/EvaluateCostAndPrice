@@ -18,6 +18,7 @@ namespace EvaluateCost
             { TypeCost.Tax, new TypeName {SystemType = typeof(MaterialCost), Name = "Налог" } },
             { TypeCost.Work, new TypeName {SystemType = typeof(CostWork), Name = "ФОТ" } },
             { TypeCost.Other, new TypeName {SystemType = typeof(OtherCost), Name = "Прочее" } },
+            { TypeCost.Service, new TypeName {SystemType = typeof(ServiceCost), Name = "Услуги" } },
             { TypeCurrency.Rub, new TypeName {SystemType = typeof(CurrencyNameValue), Name = "рубль" } },
             { TypeCurrency.Usd, new TypeName {SystemType = typeof(CurrencyNameValue), Name = "доллар" } },
             { TypeCurrency.Eur, new TypeName {SystemType = typeof(CurrencyNameValue), Name = "евро" } }

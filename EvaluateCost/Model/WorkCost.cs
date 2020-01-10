@@ -49,10 +49,8 @@ namespace EvaluateCost
                                  $"Имя затраты: {Name}\n" +
                                  $"Количество часов: {Count}\n" +
                                  $"Стоимость часа с НДС: {UnitTaxCost:N} {Currency}\n" +
-                                 $"Стоимость часа без НДС: {UnitNoTaxCost:N} {Currency}\n" +
-                                 $"Общая стоимость работ без НДС: {CostValues.WithNoTax:N} {Currency}\n" +
-                                 $"НДС: {CostValues.Tax:N} {Currency}\n" +
-                                 $"Общая стоимость работ с НДС: {CostValues.WithTax:N} {Currency}");
+                                 $"Стоимость часа без НДС: {UnitNoTaxCost:N} {Currency}\n") +
+                                 Cost.ShowCostValues(this.CostValues);
         }
     }
 }

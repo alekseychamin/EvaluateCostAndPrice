@@ -27,10 +27,8 @@ namespace EvaluateCost
                                  $"Имя затраты: {Name}\n" +
                                  $"Количество единиц: {Count}\n" +
                                  $"Стоимость единицы с НДС: {UnitTaxCost:N} {Currency}\n" +
-                                 $"Стоимость единицы без НДС: {UnitNoTaxCost:N} {Currency}\n" +
-                                 $"Общая стоимость материала без НДС: {CostValues.WithNoTax:N} {Currency}\n" +
-                                 $"НДС: {CostValues.Tax:N} {Currency}\n" +
-                                 $"Общая стоимость материала с НДС: {CostValues.WithTax:N} {Currency}");
+                                 $"Стоимость единицы без НДС: {UnitNoTaxCost:N} {Currency}\n") +
+                                 Cost.ShowCostValues(this.CostValues);
         }
     }
 }

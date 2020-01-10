@@ -50,6 +50,7 @@
     <Compile Include="Interface\ISetTax.cs" />
     <Compile Include="Interface\ITax.cs" />
     <Compile Include="Manage\Evaluate.cs" />
+    <Compile Include="Manage\Report.cs" />
     <Compile Include="Model\Cost.cs" />
     <Compile Include="Model\OtherCost.cs" />
     <Compile Include="Manage\GroupCost.cs" />
@@ -59,6 +60,7 @@
     <Compile Include="Interface\IGetTypeObject.cs" />
     <Compile Include="Model\MaterialCost.cs" />
     <Compile Include="Manage\Project.cs" />
+    <Compile Include="Model\ServiceCost.cs" />
     <Compile Include="Model\TaxWorkCost.cs" />
     <Compile Include="Types\TypeCurrency.cs" />
     <Compile Include="Types\TypeCost.cs" />
