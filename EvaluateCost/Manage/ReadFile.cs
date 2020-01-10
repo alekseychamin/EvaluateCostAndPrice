@@ -79,7 +79,7 @@ namespace EvaluateCost
                 return double.Parse(str) / 100;
             }
             else
-                return null;            
+                return null;
         }
         public static T CreateType<T>(string line, string[] headersEn, Type type)
         {
@@ -87,9 +87,9 @@ namespace EvaluateCost
             T obj = (T)Activator.CreateInstance(type);
             PropertyInfo[] props = obj.GetType().GetProperties();
 
-            for (int i = 0; i < lines.Length; i++)
+            foreach (var prop in props)
             {
-                foreach (var prop in props)
+                for (int i = 0; i < lines.Length; i++)
                 {
                     if (prop.Name == headersEn[i])
                     {
@@ -99,10 +99,9 @@ namespace EvaluateCost
                         {
                             Enum eprop = TypeObject.GetTypeObject(sprop);
                             prop.SetValue(obj, Convert.ChangeType(eprop, prop.PropertyType));
-                            break;
+                            //break;
                         }
-
-                        if (Nullable.GetUnderlyingType(prop.PropertyType) != null)
+                        else if (Nullable.GetUnderlyingType(prop.PropertyType) != null)
                         {
                             if (!string.IsNullOrEmpty(sprop))
                             {
@@ -114,8 +113,12 @@ namespace EvaluateCost
                                     prop.SetValue(obj, Convert.ChangeType(sprop, Nullable.GetUnderlyingType(prop.PropertyType)));
                             }
                             else
-                                prop.SetValue(obj, null);
-                            break;
+                            {
+                                object propValue = prop.GetValue(obj);
+                                if ((propValue != null) && ((double)propValue == 0))
+                                    prop.SetValue(obj, null);
+                            }
+                            //break;
                         }
                         else
                         {
@@ -123,8 +126,9 @@ namespace EvaluateCost
 
                             if (dprop != null)
                                 prop.SetValue(obj, Convert.ChangeType(dprop, prop.PropertyType));
-                            else
+                            else                                                           
                                 prop.SetValue(obj, Convert.ChangeType(sprop, prop.PropertyType));
+                            
 
                             //int iPercent = sprop.IndexOf(CultureInfo.CurrentCulture.NumberFormat.PercentSymbol);
                             //if (iPercent > 0)
@@ -136,8 +140,8 @@ namespace EvaluateCost
                             //else
                             //    prop.SetValue(obj, Convert.ChangeType(sprop, prop.PropertyType));
 
-                            break;
-                        }                        
+                            //break;
+                        }
                     }
                 }
             }
