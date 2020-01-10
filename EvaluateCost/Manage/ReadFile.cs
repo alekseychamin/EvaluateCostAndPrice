@@ -115,7 +115,8 @@ namespace EvaluateCost
                             else
                             {
                                 object propValue = prop.GetValue(obj);
-                                if ((propValue != null) && ((double)propValue == 0))
+
+                                if ((propValue == null) || ((double)propValue == 0))
                                     prop.SetValue(obj, null);
                             }
                             //break;
