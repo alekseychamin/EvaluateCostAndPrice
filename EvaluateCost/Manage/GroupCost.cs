@@ -156,6 +156,8 @@ namespace EvaluateCost
 
             foreach (var item in listCost)
             {
+                item.EvaluateCost();
+
                 cost.Tax += item.CostValues.Tax;
                 cost.WithTax += item.CostValues.WithTax;
                 cost.WithNoTax += item.CostValues.WithNoTax;
@@ -216,10 +218,10 @@ namespace EvaluateCost
             cost.TypeEnumObject = typeCost;
             cost.GetTypeObject = TypeObject.GetTypeObject;
             //cost.ChangeValue += (sender, e) => { Console.WriteLine(e.NewValue); };
-            cost.Name = name;
-            cost.UnitTaxCost = unitCost;
+            cost.Name.Value = name;
+            cost.UnitTaxCost.Value = unitCost;
             cost.Currency = typeCurrency;
-            cost.Count = count;
+            cost.Count.Value = count;
             listCost.Add(cost);
         }
         public void ShowCost()

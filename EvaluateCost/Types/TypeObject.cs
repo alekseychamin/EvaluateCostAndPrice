@@ -22,7 +22,8 @@ namespace EvaluateCost
             { TypeCurrency.Rub, new TypeName {SystemType = typeof(CurrencyNameValue), Name = "рубль" } },
             { TypeCurrency.Usd, new TypeName {SystemType = typeof(CurrencyNameValue), Name = "доллар" } },
             { TypeCurrency.Eur, new TypeName {SystemType = typeof(CurrencyNameValue), Name = "евро" } }
-        };
+        };        
+
         public static Type GetTypeObject(string line, string[] headersEn)
         {
             string[] lines = ReadFile.GetSplitString(line);

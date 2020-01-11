@@ -9,7 +9,7 @@ namespace EvaluateCost
 {
     class StringProperty<T>
     {
-        T Value { get; set; }
+        public T Value { get; set; }
         public string Name { get; set; }
     }
     /// <summary>
@@ -26,57 +26,67 @@ namespace EvaluateCost
         private Dictionary<TypeCost, Values> costValuesByType = new Dictionary<TypeCost, Values>();
         private Dictionary<TypeCost, Values> priceValuesByType = new Dictionary<TypeCost, Values>();
         // поле стоимости ед. затраты
-        protected double? unitTaxCost;
-        protected double? unitNoTaxCost;
+        protected StringProperty<double?> unitTaxCost;
+        protected StringProperty<double?> unitNoTaxCost;
+
         protected double? koefCurrency = 1;
-        // НДС значение        
+        // ставка НДС значение        
         protected double? costTax;
         protected double? socialTax;
         // тип валюты
         protected TypeCurrency currency;
+
         // тип затраты
         protected TypeCost typeCost;
+
         // поле количество затраты
-        protected double? count;
+        protected StringProperty<double?> count;
+
         // поле для указания части системы (при расчете стоимости аналогично сводным таблицам)
         protected StringProperty<string> partSystem;
         // поле для указания комментария
-        protected string comment;
+        protected StringProperty<string> comment;
         // региональный коэффициент, учет скидки на материалы, ставка налога для ФОТ
-        protected double? koef = 1;
+        protected StringProperty<double?> koef;
 
         // количество человек
-        protected double? countHuman = 1;
+        protected StringProperty<double?> countHuman;
 
         public Values CostValues => cost;
         public Values PriceValues => price;
-        public virtual string Name { get; set; }
-        public double? CountHuman { get => countHuman; set => countHuman = value; }
-        public double? UnitTaxCost
+        public virtual StringProperty<string> Name { get; set; }
+        public StringProperty<double?> CountHuman { get => countHuman; set => countHuman = value; }
+        public StringProperty<double?> UnitTaxCost
         {
             get => unitTaxCost;
             set
             {
-                IsValidDoubleValue(value, "UnitTaxCost");
-                SetValue(value, ref unitTaxCost);
+                IsValidDoubleValue(value.Value, "UnitTaxCost");
+                unitTaxCost = value;
+                EvaluateCost();
+                OnChangeValue(new ChangeValueEventArgs(value.Value));
             }
         }
-        public double? UnitNoTaxCost
+        public StringProperty<double?> UnitNoTaxCost
         {
             get => unitNoTaxCost;
             set
             {
-                IsValidDoubleValue(value, "UnitNoTaxCost");
-                SetValue(value, ref unitNoTaxCost);
+                IsValidDoubleValue(value.Value, "UnitNoTaxCost");
+                unitNoTaxCost = value;
+                EvaluateCost();
+                OnChangeValue(new ChangeValueEventArgs(value.Value));
             }
         }
-        public double? Count
+        public StringProperty<double?> Count
         {
             get => count;
             set
             {
-                IsValidDoubleValue(value, "Count");
-                SetValue(value, ref count);
+                IsValidDoubleValue(value.Value, "Count");
+                count = value;
+                EvaluateCost();
+                OnChangeValue(new ChangeValueEventArgs(value.Value));
             }
         }
         public double? CostTax
@@ -115,10 +125,10 @@ namespace EvaluateCost
             }
         }
         public virtual TypeCurrency Currency { get => currency; set => currency = value; }
-        public virtual string Comment { get => comment; set => comment = value; }
+        public virtual StringProperty<string> Comment { get => comment; set => comment = value; }
         public virtual StringProperty<string> PartSystem { get => partSystem; set => partSystem = value; }
         public TypeCost TypeEnumObject { get => typeCost; set => typeCost = value; }
-        public double? Koef { get => koef; set => koef = value; }
+        public StringProperty<double?> Koef { get => koef; set => koef = value; }
         public Func<Enum, string> GetTypeObject { get; set; }
         public double? Kprofitability { get; set; }
         public Dictionary<TypeCost, Values> CostValuesByType => costValuesByType;
@@ -136,7 +146,7 @@ namespace EvaluateCost
         }
         public Cost(string name, TypeCost typeCost)
         {
-            this.Name = name;
+            this.Name.Value = name;
             this.TypeEnumObject = typeCost;
         }
         /// <summary>
@@ -174,18 +184,7 @@ namespace EvaluateCost
             if (value.HasValue && value.Value < 0)
                 throw new ArgumentOutOfRangeException($"Значение: {value} для параметра {paramName} не допустимо");
         }
-        /// <summary>
-        /// метод записи входного значения в поле класса
-        /// </summary>
-        /// <param name="inputValue">входное значение для записи в поле</param>
-        /// <param name="outValue">переменная поля класса для записи</param>
-        private void SetValue(double? inputValue, ref double? outValue)
-        {
-            outValue = inputValue;
-            EvaluateCost();
-            OnChangeValue(new ChangeValueEventArgs(outValue));
-        }
-        
+
         /// <summary>
         /// метод вызывающий событие
         /// </summary>
@@ -195,40 +194,51 @@ namespace EvaluateCost
             //if (temp != null) temp(this, e);
             temp?.Invoke(this, e);
         }
-        
+
         /// <summary>
         /// метод для пересчета стоимости затраты, реализовывается в производных классах
         /// </summary>
         private void ChangeUnitCostCurrency()
         {
-            if (unitNoTaxCost.HasValue)
+            if ((unitNoTaxCost != null) && unitNoTaxCost.Value.HasValue)
             {
-                unitNoTaxCost = unitNoTaxCost * koefCurrency;
+                unitNoTaxCost.Value = unitNoTaxCost.Value * koefCurrency;
             }
-            else if (unitTaxCost.HasValue)
+            else if ((unitTaxCost != null) && unitTaxCost.Value.HasValue)
             {
-                unitTaxCost = unitTaxCost * koefCurrency;
+                unitTaxCost.Value = unitTaxCost.Value * koefCurrency;
             }
+        }
+
+        private void SetDefValueToStringProperty<T>(ref StringProperty<T> value)
+        {
+            if (value == null)
+            {
+                value = new StringProperty<T>();
+                value.Value = default(T);
+            }            
         }
         public virtual void EvaluateCost()
         {
-            if (!koef.HasValue)
-                koef = 1;
+            SetDefValueToStringProperty<double?>(ref koef);
+            if (!koef.Value.HasValue)
+                koef.Value = 1;
 
-            if (!countHuman.HasValue)
-                countHuman = 1;
+            SetDefValueToStringProperty<double?>(ref countHuman);
+            if (!countHuman.Value.HasValue)
+                countHuman.Value = 1;
 
             cost.Currency = this.Currency;
 
-            if (unitNoTaxCost.HasValue)
+            if ((unitNoTaxCost != null) && (unitNoTaxCost.Value.HasValue))
             {
-                cost.WithNoTax = count * unitNoTaxCost * koef * countHuman;
+                cost.WithNoTax = count?.Value * unitNoTaxCost.Value * koef?.Value * countHuman.Value;
                 cost.Tax = cost.WithNoTax * costTax;
-                cost.WithTax = cost.WithNoTax + cost.Tax;                
+                cost.WithTax = cost.WithNoTax + cost.Tax;
             }
-            else if (unitTaxCost.HasValue)
+            else if ((unitTaxCost != null) && (unitTaxCost.Value.HasValue))
             {
-                cost.WithTax = count * unitTaxCost * koef * countHuman;
+                cost.WithTax = count?.Value * unitTaxCost.Value * koef?.Value * countHuman?.Value;
                 cost.Tax = (cost.WithTax * costTax) / (1 + costTax);
                 cost.WithNoTax = cost.WithTax - cost.Tax;
             }
@@ -243,14 +253,14 @@ namespace EvaluateCost
         {
             return string.Format($"Себестоимость без НДС: {values.WithNoTax:N} {values.Currency}\n" +
                                  $"НДС: {values.Tax:N} {values.Currency}\n" +
-                                 $"Себестоимость с НДС: {values.WithTax:N} {values.Currency}\n");             
+                                 $"Себестоимость с НДС: {values.WithTax:N} {values.Currency}\n");
         }
 
         public static string ShowPriceValues(Values values)
         {
             return string.Format($"Цена без НДС: {values.WithNoTax:N} {values.Currency}\n" +
                                  $"НДС: {values.Tax:N} {values.Currency}\n" +
-                                 $"Цена с НДС: {values.WithTax:N} {values.Currency}\n");            
+                                 $"Цена с НДС: {values.WithTax:N} {values.Currency}\n");
         }
     }
 }

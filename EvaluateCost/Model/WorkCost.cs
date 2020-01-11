@@ -34,13 +34,14 @@ namespace EvaluateCost
         {
             base.EvaluateCost();
             cost.Tax = 0;
+            
+                if ((UnitNoTaxCost != null) && UnitNoTaxCost.Value.HasValue)
+                    cost.WithTax = cost.WithNoTax;
+                else if ((UnitTaxCost != null) && UnitTaxCost.Value.HasValue)
+                    cost.WithNoTax = cost.WithTax;
 
-            if (UnitNoTaxCost.HasValue)                                         
-                cost.WithTax = cost.WithNoTax;            
-            else if (UnitTaxCost.HasValue)                                            
-                cost.WithNoTax = cost.WithTax;
-
-            taxWorkCost?.EvaluateCost();
+                taxWorkCost?.EvaluateCost();
+            
         }
 
         public override string ToString()

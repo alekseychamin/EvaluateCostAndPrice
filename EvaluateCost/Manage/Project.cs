@@ -202,30 +202,30 @@ namespace EvaluateCost
         private void AddValues(Dictionary<string, Dictionary<TypeCost, Values>> valuesByCommentType,                               
                                Values costValues, Cost cost, TypeCurrency currency)
         {
-            if (valuesByCommentType.ContainsKey(cost.Comment))
+            if (valuesByCommentType.ContainsKey(cost.Comment.Value))
             {
-                if (valuesByCommentType[cost.Comment].ContainsKey(cost.TypeEnumObject))
+                if (valuesByCommentType[cost.Comment.Value].ContainsKey(cost.TypeEnumObject))
                 {
-                    Values values = valuesByCommentType[cost.Comment][cost.TypeEnumObject];
+                    Values values = valuesByCommentType[cost.Comment.Value][cost.TypeEnumObject];
                     values.WithNoTax += costValues.WithNoTax;
                     values.WithTax += costValues.WithTax;
                     values.Tax += costValues.Tax;
                     values.Currency = currency;
-                    valuesByCommentType[cost.Comment][cost.TypeEnumObject] = values;
+                    valuesByCommentType[cost.Comment.Value][cost.TypeEnumObject] = values;
                 }
                 else
                 {
                     Values values = costValues;
                     values.Currency = currency;
-                    valuesByCommentType[cost.Comment].Add(cost.TypeEnumObject, values);
+                    valuesByCommentType[cost.Comment.Value].Add(cost.TypeEnumObject, values);
                 }
             }
             else
             {
                 Values values = costValues;
                 values.Currency = currency;
-                valuesByCommentType.Add(cost.Comment, new Dictionary<TypeCost, Values>());
-                valuesByCommentType[cost.Comment].Add(cost.TypeEnumObject, values);
+                valuesByCommentType.Add(cost.Comment.Value, new Dictionary<TypeCost, Values>());
+                valuesByCommentType[cost.Comment.Value].Add(cost.TypeEnumObject, values);
             }           
         }
 

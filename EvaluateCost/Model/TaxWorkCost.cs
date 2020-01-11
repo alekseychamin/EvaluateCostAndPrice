@@ -10,11 +10,12 @@ namespace EvaluateCost
     {
         private Cost workCost;
 
-        public override string Name
+        public override StringProperty<string> Name
         {
             get
-            {                
-                return "Налог на " + workCost?.Name;
+            {
+                this.Name.Value = "Налог на " + workCost?.Name.Value;
+                return this.Name;
             }
         }
 
@@ -26,7 +27,7 @@ namespace EvaluateCost
             }
         }
 
-        public override string Comment
+        public override StringProperty<string> Comment
         {
             get
             {
