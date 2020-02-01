@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EvaluateCost
 {
-    class ServiceCost : Cost
+    class CostOther : Cost
     {
         public override string ToString()
         {

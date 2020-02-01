@@ -9,54 +9,48 @@ namespace EvaluateCost
 {
     class Program
     {
-        private static void Update(Manager manager)
-        {
-            try
-            {
-                manager.GetTypeCurrencyNameValue("Курс валют.csv");
-                manager.LoadProject("Проекты.csv");
-                manager.LoadProjectProfitability();
-                manager.EvaluateTaxWorkCost();
-                manager.EvaluateCost();
-                manager.SetTaxAndCurrency();
-                manager.GetCostValues();
-                //manager.GetPriceValues();
-                manager.GetPriceWithProfProject();
-                manager.GetCostPriceValuesByComment();
-
-                manager.ShowCost();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
-            }            
-        }
         static void Main(string[] args)
         {
             Manager manager = new Manager();
             string input;
             bool done = false;
+            manager.ShowWelcomeString();
 
             while (!done)
             {
+                Console.Write("Введите команду: ");
                 input = Console.ReadLine();
-
-                switch (input.ToLower())
+                try
                 {
-                    case "u":
-                        Update(manager);
-                        break;
-                    case "q":
-                        done = true;
-                        break;
-                    default:
-                        break;
-                }                
+                    switch (input.ToLower())
+                    {
+                        case "u":
+                            manager.Update();
+                            break;
+                        case "s":                            
+                            manager.SaveReports();
+                            Console.WriteLine("Отчеты сохранены.");
+                            break;
+                        case "h":
+                            manager.ShowNameColumn();
+                            break;
+                        case "c":
+                            Console.Clear();
+                            manager.ShowWelcomeString();
+                            break;
+                        case "q":
+                            done = true;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine(ex.StackTrace);
+                }
             }
-            
-
-            
         }
     }
 }

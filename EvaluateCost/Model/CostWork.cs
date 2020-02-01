@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace EvaluateCost
 {
-    class CostWork : Cost
+    abstract class CostWork : Cost
     {
-        private TaxWorkCost taxWorkCost;
+        private CostTaxWork taxWorkCost;
 
-        public TaxWorkCost TaxWorkCost { get => taxWorkCost; }
+        public CostTaxWork TaxWorkCost { get => taxWorkCost; }
         public CostWork()
         {
 
@@ -20,11 +20,11 @@ namespace EvaluateCost
         {
 
         }
-        public TaxWorkCost AddTaxWorkCost()
+        public CostTaxWork AddTaxWorkCost()
         {
             if (taxWorkCost == null)
             {
-                TaxWorkCost taxWC = new TaxWorkCost(this);
+                CostTaxWork taxWC = new CostTaxWork(this);
                 taxWorkCost = taxWC;
                 return taxWC;
             }
@@ -40,8 +40,7 @@ namespace EvaluateCost
                 else if ((UnitTaxCost != null) && UnitTaxCost.Value.HasValue)
                     cost.WithNoTax = cost.WithTax;
 
-                taxWorkCost?.EvaluateCost();
-            
+                taxWorkCost?.EvaluateCost();            
         }
 
         public override string ToString()

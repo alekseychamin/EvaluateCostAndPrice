@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EvaluateCost
 {
-    class TaxWorkCost : Cost
+    class CostTaxWork : Cost
     {
         private Cost workCost;
 
@@ -14,8 +14,9 @@ namespace EvaluateCost
         {
             get
             {
-                this.Name.Value = "Налог на " + workCost?.Name.Value;
-                return this.Name;
+                name.Value = "Налог на " + workCost?.Name.Value;
+                name.Name = workCost?.Name.Name ?? null;
+                return name;
             }
         }
 
@@ -23,7 +24,7 @@ namespace EvaluateCost
         {
             get
             {
-                return workCost?.PartSystem;
+                return workCost?.PartSystem ?? null;
             }
         }
 
@@ -31,7 +32,7 @@ namespace EvaluateCost
         {
             get
             {
-                return workCost?.Comment;
+                return workCost?.Comment ?? null;
             }
         }
 
@@ -43,11 +44,12 @@ namespace EvaluateCost
             }
         }
 
-        public TaxWorkCost(Cost wCost)
+        public CostTaxWork(Cost wCost)
         {
             workCost = wCost;                        
             this.TypeEnumObject = TypeCost.Tax;
             this.socialTax = wCost.SocialTax;
+            this.id = wCost.Id;
             //this.Currency = wCost.Currency;
             //this.Name = "Налог на " + wCost.Name;
             //this.Comment = wCost.Comment;

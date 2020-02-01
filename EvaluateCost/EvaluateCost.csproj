@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Interface\ICPValues.cs" />
+    <Compile Include="Interface\IGetDurationId.cs" />
     <Compile Include="Interface\IGetKprofByType.cs" />
     <Compile Include="Interface\IGetPValuesByType.cs" />
     <Compile Include="Interface\ISetCurrency.cs" />
@@ -52,19 +53,22 @@
     <Compile Include="Manage\Evaluate.cs" />
     <Compile Include="Manage\Report.cs" />
     <Compile Include="Model\Cost.cs" />
-    <Compile Include="Model\OtherCost.cs" />
+    <Compile Include="Model\CostOther.cs" />
     <Compile Include="Manage\GroupCost.cs" />
     <Compile Include="Interface\IChangeValue.cs" />
     <Compile Include="Interface\IGetCValuesByType.cs" />
     <Compile Include="Interface\IGetTypeEnumObject.cs" />
     <Compile Include="Interface\IGetTypeObject.cs" />
-    <Compile Include="Model\MaterialCost.cs" />
+    <Compile Include="Model\CostMaterial.cs" />
     <Compile Include="Manage\Project.cs" />
-    <Compile Include="Model\ServiceCost.cs" />
+    <Compile Include="Model\CostService.cs" />
+    <Compile Include="Model\CostWorkOffice.cs" />
+    <Compile Include="Model\CostWorkOnSite.cs" />
+    <Compile Include="Model\ICost.cs" />
     <Compile Include="Model\TaxWorkCost.cs" />
     <Compile Include="Types\TypeCurrency.cs" />
     <Compile Include="Types\TypeCost.cs" />
-    <Compile Include="Model\WorkCost.cs" />
+    <Compile Include="Model\CostWork.cs" />
     <Compile Include="Manage\Manager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -28,6 +28,54 @@ namespace EvaluateCost
             ReadFile.Load<CurrencyNameValue>(filename, listCurrencyNameValue);
         }
 
+        public void ShowWelcomeString()
+        {
+            string welcome = @"Программа для расчета коммерческих предложений." +
+                              "{0} Для работы используются следующие команды:" +
+                              "{0} -u (обновить расчет из описания проектов файл - Проекты.csv с учетом курсов валют из файла - Курс валют.csv," +
+                              "{0}     файлы находятся в текущей директории программы и сохранить отчеты - отчет по срокам, финансовый отчет)" +
+                              "{0} -s (сохранить отчеты - финансовый отчет, отчет длительности, отчет для ЗВЭК)" +
+                              "{0} -h (вывести названия столбцов, которые можно использовать для ввода данных в csv файлах)" +
+                              "{0} -c (очистить экран)" +
+                              "{0} -q (выход из прогрммы) {0}";
+            Console.WriteLine(welcome, Environment.NewLine);
+        }
+
+        public void ShowNameColumn()
+        {
+            Console.WriteLine("В файлах csv возможно использование следующих имен колонок: \n");
+            foreach (var item in Properties.Value.Keys)
+                Console.WriteLine($"{item}");
+        }
+
+        public void Update()
+        {
+            GetTypeCurrencyNameValue("Курс валют.csv");
+            LoadProject("Проекты.csv");
+            LoadProjectProfitability();
+            EvaluateTaxWorkCost();
+            EvaluateCost();
+            SetTaxAndCurrency();
+            GetCostValues();
+            GetPriceWithProfProject();
+            GetCostPriceValuesByComment();
+            GetDuration();
+
+            ShowReports();
+        }
+
+        private void RemoveProject()
+        {
+            int i = 0;
+            while (i < listProject.Count)
+            {
+                if (listProject[i].isCalculate == 0)
+                    listProject.RemoveAt(i);
+                else
+                    i++;
+            }
+        }
+
         public void LoadProject(string filename)
         {
             //listProject.Clear();
@@ -36,6 +84,7 @@ namespace EvaluateCost
             //listT = ReadFile.GetObjects<Project>(filename, Properties.Value);
             //listProject.AddRange(listT);
             ReadFile.Load<Project>(filename, listProject);
+            RemoveProject();
             LoadProjectGroupCost();            
         }
 
@@ -105,11 +154,28 @@ namespace EvaluateCost
             }
         }
 
-        public void ShowCost()
+        public void GetDuration()
+        {
+            foreach (var project in listProject)
+            {
+                project.GetDurationById();
+                project.GetDurationByCommentId();
+            }
+        }
+
+        public void SaveReports()
+        {
+            foreach (var project in listProject)
+            {
+                project.SaveReports();
+            }
+        }
+
+        public void ShowReports()
         {
             foreach (var project in listProject)
             {                
-                project.ShowCost();
+                project.ShowReports();
             }
         }
     }

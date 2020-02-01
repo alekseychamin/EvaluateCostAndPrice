@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace EvaluateCost
 {
-    class MaterialCost : Cost
+    class CostMaterial : Cost
     {
-        public MaterialCost()
+        public CostMaterial()
         {
 
         }
-        public MaterialCost(string name, TypeCost typeCost,
+        public CostMaterial(string name, TypeCost typeCost,
                             Func<Cost, string> getTypeCostName) : base(name, typeCost)
         {
 

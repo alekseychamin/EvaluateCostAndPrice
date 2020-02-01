@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 namespace EvaluateCost
 {
     class StringProperty<T>
-    {
+    {        
         public T Value { get; set; }
         public string Name { get; set; }
     }
@@ -17,7 +18,7 @@ namespace EvaluateCost
     /// </summary>
     abstract class Cost : IGetTypeEnumObject<TypeCost>,
                           IChangeValue, IGetTypeObject,
-                          ITax, ICPValues, IGetPValuesByType
+                          ITax, ICPValues, IGetPValuesByType, IGetDurationId
     {
         // поле себестоиомости затраты, выполняется пересчет в производных классах        
 
@@ -25,10 +26,13 @@ namespace EvaluateCost
         protected Values price;
         private Dictionary<TypeCost, Values> costValuesByType = new Dictionary<TypeCost, Values>();
         private Dictionary<TypeCost, Values> priceValuesByType = new Dictionary<TypeCost, Values>();
+        protected StringProperty<string> name = new StringProperty<string>();
         // поле стоимости ед. затраты
-        protected StringProperty<double?> unitTaxCost;
-        protected StringProperty<double?> unitNoTaxCost;
+        protected StringProperty<double?> unitTaxCost = new StringProperty<double?>();
+        protected StringProperty<double?> unitNoTaxCost = new StringProperty<double?>();
+        protected StringProperty<double?> duration = new StringProperty<double?>();
 
+        protected string id = string.Empty;
         protected double? koefCurrency = 1;
         // ставка НДС значение        
         protected double? costTax;
@@ -40,21 +44,22 @@ namespace EvaluateCost
         protected TypeCost typeCost;
 
         // поле количество затраты
-        protected StringProperty<double?> count;
+        protected StringProperty<double?> count = new StringProperty<double?>();
 
         // поле для указания части системы (при расчете стоимости аналогично сводным таблицам)
-        protected StringProperty<string> partSystem;
+        protected StringProperty<string> partSystem = new StringProperty<string>();
         // поле для указания комментария
-        protected StringProperty<string> comment;
+        protected StringProperty<string> comment = new StringProperty<string>();
+        protected string note;
         // региональный коэффициент, учет скидки на материалы, ставка налога для ФОТ
-        protected StringProperty<double?> koef;
+        protected StringProperty<double?> koef = new StringProperty<double?>();
 
         // количество человек
-        protected StringProperty<double?> countHuman;
+        protected StringProperty<double?> countHuman = new StringProperty<double?>();
 
         public Values CostValues => cost;
         public Values PriceValues => price;
-        public virtual StringProperty<string> Name { get; set; }
+        public virtual StringProperty<string> Name { get => name; set => name = value; }
         public StringProperty<double?> CountHuman { get => countHuman; set => countHuman = value; }
         public StringProperty<double?> UnitTaxCost
         {
@@ -83,6 +88,7 @@ namespace EvaluateCost
             get => count;
             set
             {
+                Contract.Requires(value.Value.HasValue && value.Value >= 0);
                 IsValidDoubleValue(value.Value, "Count");
                 count = value;
                 EvaluateCost();
@@ -126,8 +132,11 @@ namespace EvaluateCost
         }
         public virtual TypeCurrency Currency { get => currency; set => currency = value; }
         public virtual StringProperty<string> Comment { get => comment; set => comment = value; }
+        public virtual string Note { get => note; set => note = value; }
+        public string Id { get => id; set => id = value; }
         public virtual StringProperty<string> PartSystem { get => partSystem; set => partSystem = value; }
         public TypeCost TypeEnumObject { get => typeCost; set => typeCost = value; }
+        public StringProperty<double?> Duration { get => duration; set => duration = value; }
         public StringProperty<double?> Koef { get => koef; set => koef = value; }
         public Func<Enum, string> GetTypeObject { get; set; }
         public double? Kprofitability { get; set; }
@@ -176,7 +185,7 @@ namespace EvaluateCost
 
             this.price.Tax = this.PriceValues.WithNoTax * this.CostTax;
             this.price.WithTax = this.PriceValues.WithNoTax + this.PriceValues.Tax;
-            this.price.Currency = this.Currency;
+            this.price.Currency = this.Currency;            
         }
 
         protected virtual void IsValidDoubleValue(double? value, String paramName)
@@ -218,6 +227,11 @@ namespace EvaluateCost
                 value.Value = default(T);
             }            
         }
+
+        public virtual double? AmountWork()
+        {
+            return count?.Value * countHuman?.Value;
+        }
         public virtual void EvaluateCost()
         {
             SetDefValueToStringProperty<double?>(ref koef);
@@ -241,13 +255,13 @@ namespace EvaluateCost
                 cost.WithTax = count?.Value * unitTaxCost.Value * koef?.Value * countHuman?.Value;
                 cost.Tax = (cost.WithTax * costTax) / (1 + costTax);
                 cost.WithNoTax = cost.WithTax - cost.Tax;
-            }
+            }            
         }
 
         public void GetPriceValuesByType()
         {
             priceValuesByType.Add(this.TypeEnumObject, price);
-        }
+        }        
 
         public static string ShowCostValues(Values values)
         {
@@ -261,6 +275,14 @@ namespace EvaluateCost
             return string.Format($"Цена без НДС: {values.WithNoTax:N} {values.Currency}\n" +
                                  $"НДС: {values.Tax:N} {values.Currency}\n" +
                                  $"Цена с НДС: {values.WithTax:N} {values.Currency}\n");
+        }
+
+        public int CompareTo(object obj)
+        {
+            Cost otherCost = obj as Cost;
+            if (otherCost == null) throw new ArgumentException("Obj не экземпляр класса Cost");
+
+            return this.id.CompareTo(otherCost.id);                
         }
     }
 }
