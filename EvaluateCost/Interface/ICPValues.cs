@@ -11,7 +11,7 @@ namespace EvaluateCost
         public double? WithNoTax;
         public double? Tax;
         public double? WithTax;
-        public TypeCurrency Currency;
+        public TypeCurrency Currency;        
     }
     interface ICPValues
     {

@@ -6,31 +6,33 @@ using System.Threading.Tasks;
 
 namespace EvaluateCost
 {
-    class TaxWorkCost : Cost
+    class CostTaxWork : Cost
     {
         private Cost workCost;
 
-        public override string Name
-        {
-            get
-            {                
-                return "Налог на " + workCost?.Name;
-            }
-        }
-
-        public override string PartSystem
+        public override StringProperty<string> Name
         {
             get
             {
-                return workCost?.PartSystem;
+                name.Value = "Налог на " + workCost?.Name.Value;
+                name.Name = workCost?.Name.Name ?? null;
+                return name;
             }
         }
 
-        public override string Comment
+        public override StringProperty<string> PartSystem
         {
             get
             {
-                return workCost?.Comment;
+                return workCost?.PartSystem ?? null;
+            }
+        }
+
+        public override StringProperty<string> Comment
+        {
+            get
+            {
+                return workCost?.Comment ?? null;
             }
         }
 
@@ -42,11 +44,12 @@ namespace EvaluateCost
             }
         }
 
-        public TaxWorkCost(Cost wCost)
+        public CostTaxWork(Cost wCost)
         {
             workCost = wCost;                        
             this.TypeEnumObject = TypeCost.Tax;
             this.socialTax = wCost.SocialTax;
+            this.id = wCost.Id;
             //this.Currency = wCost.Currency;
             //this.Name = "Налог на " + wCost.Name;
             //this.Comment = wCost.Comment;

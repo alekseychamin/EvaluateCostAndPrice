@@ -12,11 +12,13 @@ namespace EvaluateCost
     /// коллекция для хранения группы затрат с общим центром затрат (индивидульное имя, % рентабельности и т.д.)
     /// </summary>
     class GroupCost : IGetTypeEnumObject<TypeGroupCost>,
-                      IGetTypeObject, ISetTax, 
+                      IGetTypeObject, ISetTax,
                       ISetCurrency, ITax,
-                      IGetCValuesByType, ICPValues, 
-                      IGetPValuesByType                      
+                      IGetCValuesByType, ICPValues,
+                      IGetPValuesByType, IGetDurationId
     {
+        private string id = string.Empty;
+        private StringProperty<double?> duration = new StringProperty<double?>();
         private List<Cost> listCost = new List<Cost>();
         private Dictionary<TypeCost, Values> costValuesByType = new Dictionary<TypeCost, Values>();
         private Dictionary<TypeCost, Values> priceValuesByType = new Dictionary<TypeCost, Values>();
@@ -25,6 +27,8 @@ namespace EvaluateCost
         private Values cost;
         private Values price;
 
+        public string Id { get => id; set => id = value; }
+        public StringProperty<double?> Duration { get => duration; set => duration = value; }
         public String Name { get; set; }
         public List<Cost> ListCost { get => listCost; }
         public TypeCurrency Currency { get; set; }
@@ -68,7 +72,7 @@ namespace EvaluateCost
             }
         }
         public double? Kprofitability { get; set; }
-                
+
 
         /// <summary>
         /// метод для загрузки перечня затрат в составе цента затрат
@@ -89,6 +93,12 @@ namespace EvaluateCost
                 item.SocialTax = this.SocialTax;
             }
         }
+        
+        public void GetDurationById()
+        {
+            duration = Evaluate.GetDurationById<Cost>(listCost);
+        }        
+
         public void SetCurrency()
         {
             CurrencyNameValue groupCurrencyName =
@@ -156,6 +166,8 @@ namespace EvaluateCost
 
             foreach (var item in listCost)
             {
+                item.EvaluateCost();
+
                 cost.Tax += item.CostValues.Tax;
                 cost.WithTax += item.CostValues.WithTax;
                 cost.WithNoTax += item.CostValues.WithNoTax;
@@ -180,7 +192,7 @@ namespace EvaluateCost
                 }
                 else
                     costValuesByType.Add(item.TypeEnumObject, item.CostValues);
-            }           
+            }
         }
 
         public void EvaluateCost()
@@ -196,19 +208,16 @@ namespace EvaluateCost
             List<Cost> listT = new List<Cost>();
             foreach (var item in listCost)
             {
-                if (item.TypeEnumObject == TypeCost.Work)
+                CostWork costWork = item as CostWork;
+                if (costWork != null)
                 {
-                    CostWork costWork = item as CostWork;
-                    if (costWork != null)
-                    {
-                        TaxWorkCost taxWC = costWork.AddTaxWorkCost();
-                        if (taxWC != null) listT.Add(taxWC);
-                    }
+                    CostTaxWork taxWC = costWork.AddTaxWorkCost();
+                    if (taxWC != null) listT.Add(taxWC);
                 }
             }
             listCost.AddRange(listT);
         }
-        
+
         public void AddCost(TypeCost typeCost, string name, double unitCost, TypeCurrency typeCurrency, double count)
         {
             Type type = TypeObject.Value[typeCost].SystemType;
@@ -216,10 +225,10 @@ namespace EvaluateCost
             cost.TypeEnumObject = typeCost;
             cost.GetTypeObject = TypeObject.GetTypeObject;
             //cost.ChangeValue += (sender, e) => { Console.WriteLine(e.NewValue); };
-            cost.Name = name;
-            cost.UnitTaxCost = unitCost;
+            cost.Name.Value = name;
+            cost.UnitTaxCost.Value = unitCost;
             cost.Currency = typeCurrency;
-            cost.Count = count;
+            cost.Count.Value = count;
             listCost.Add(cost);
         }
         public void ShowCost()
@@ -246,6 +255,14 @@ namespace EvaluateCost
             //    Console.WriteLine(item.ToString());
             //    Console.WriteLine(new string('-', 20));
             //}
+        }
+
+        public int CompareTo(object obj)
+        {
+            GroupCost otherGroup = obj as GroupCost;
+            if (otherGroup == null) throw new ArgumentException("Obj не экземпляр класса GroupCost");
+
+            return this.id.CompareTo(otherGroup.id);
         }
     }
 }

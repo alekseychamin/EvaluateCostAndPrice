@@ -25,11 +25,16 @@ namespace EvaluateCost
         private Dictionary<string, Values> priceValuesByComment = new Dictionary<string, Values>();
         private Report report;
 
+        private StringProperty<double?> duration = new StringProperty<double?>();
+        private Dictionary<string, StringProperty<double?>> durationByComment = new Dictionary<string, StringProperty<double?>>();
         private double? costTax;
         private double? socialTax;
         private Values cost;
         private Values price;
-        
+
+        public StringProperty<double?> Duration { get => duration; set => duration = value; }
+        public Dictionary<string, StringProperty<double?>> DurationByComment { get => durationByComment; }
+        public double isCalculate { get; set; }
         public string Name { get; set; }
         public string FileNameCost { get; set; }
         public string FileNameProf { get; set; }
@@ -115,9 +120,22 @@ namespace EvaluateCost
 
                 cost.Tax += group.CostValues.Tax;
                 cost.WithTax += group.CostValues.WithTax;
-                cost.WithNoTax += group.CostValues.WithNoTax;
+                cost.WithNoTax += group.CostValues.WithNoTax;                
                 cost.Currency = group.Currency;
             }
+        }
+
+        public void GetDurationById()
+        {
+            foreach (var group in listNameGroupCost)
+                group.GetDurationById();
+            
+            duration = Evaluate.GetDurationById<GroupCost>(listNameGroupCost);
+        }
+
+        public void GetDurationByCommentId()
+        {
+            durationByComment = Evaluate.GetDurationByCommentId(listNameGroupCost);
         }
 
         public void GetPriceValues(List<Profitability> listProf = null)
@@ -202,30 +220,30 @@ namespace EvaluateCost
         private void AddValues(Dictionary<string, Dictionary<TypeCost, Values>> valuesByCommentType,                               
                                Values costValues, Cost cost, TypeCurrency currency)
         {
-            if (valuesByCommentType.ContainsKey(cost.Comment))
+            if (valuesByCommentType.ContainsKey(cost.Comment.Value))
             {
-                if (valuesByCommentType[cost.Comment].ContainsKey(cost.TypeEnumObject))
+                if (valuesByCommentType[cost.Comment.Value].ContainsKey(cost.TypeEnumObject))
                 {
-                    Values values = valuesByCommentType[cost.Comment][cost.TypeEnumObject];
+                    Values values = valuesByCommentType[cost.Comment.Value][cost.TypeEnumObject];
                     values.WithNoTax += costValues.WithNoTax;
                     values.WithTax += costValues.WithTax;
-                    values.Tax += costValues.Tax;
+                    values.Tax += costValues.Tax;                    
                     values.Currency = currency;
-                    valuesByCommentType[cost.Comment][cost.TypeEnumObject] = values;
+                    valuesByCommentType[cost.Comment.Value][cost.TypeEnumObject] = values;
                 }
                 else
                 {
                     Values values = costValues;
                     values.Currency = currency;
-                    valuesByCommentType[cost.Comment].Add(cost.TypeEnumObject, values);
+                    valuesByCommentType[cost.Comment.Value].Add(cost.TypeEnumObject, values);
                 }
             }
             else
             {
                 Values values = costValues;
                 values.Currency = currency;
-                valuesByCommentType.Add(cost.Comment, new Dictionary<TypeCost, Values>());
-                valuesByCommentType[cost.Comment].Add(cost.TypeEnumObject, values);
+                valuesByCommentType.Add(cost.Comment.Value, new Dictionary<TypeCost, Values>());
+                valuesByCommentType[cost.Comment.Value].Add(cost.TypeEnumObject, values);
             }           
         }
 
@@ -250,13 +268,13 @@ namespace EvaluateCost
                 values.WithNoTax = 0;
                 values.WithTax = 0;
                 values.Tax = 0;
-                values.Currency = TypeCurrency.None;
+                values.Currency = TypeCurrency.None;                
                 foreach (var keyType in valuesCommentType[keyName].Keys)
                 {
                     values.Currency = valuesCommentType[keyName][keyType].Currency;
                     values.WithNoTax += valuesCommentType[keyName][keyType].WithNoTax;
                     values.WithTax += valuesCommentType[keyName][keyType].WithTax;
-                    values.Tax += valuesCommentType[keyName][keyType].Tax;
+                    values.Tax += valuesCommentType[keyName][keyType].Tax;                    
                 }
                 valuesComment.Add(keyName, values);
             }
@@ -284,7 +302,7 @@ namespace EvaluateCost
                         Values price = priceValuesByType[item.Key];
                         price.Tax += item.Value.Tax;
                         price.WithNoTax += item.Value.WithNoTax;
-                        price.WithTax += item.Value.WithTax;
+                        price.WithTax += item.Value.WithTax;                       
                         priceValuesByType[item.Key] = price;
                     }
                     else
@@ -309,7 +327,7 @@ namespace EvaluateCost
                         Values cost = costValuesByType[item.Key];
                         cost.Tax += item.Value.Tax;
                         cost.WithNoTax += item.Value.WithNoTax;
-                        cost.WithTax += item.Value.WithTax;
+                        cost.WithTax += item.Value.WithTax;                        
                         costValuesByType[item.Key] = cost;
                     }
                     else
@@ -407,10 +425,16 @@ namespace EvaluateCost
                 Console.WriteLine($"Центр затрат с именем {nameGroup} не существует.");
         }
 
-        public void ShowCost()
+        public void SaveReports()
         {
-            report.MakeFinancialReport();
             report.SaveReport();
+        }
+
+        public void ShowReports()
+        {
+            report.MakeFinancialReport("Финансовый отчет", "Фин_показатели проекта {0}.txt"); ;
+            report.MakeForOtherCompanyReport("Отчет для ЗВЭК", "Отчет для ЗВЭК для проекта {0}.txt");
+            report.MakeDuratinReport("Отчет по срокам", "Показатели длительности для проекта {0}.txt");            
             report.Show();
         }
     }

@@ -54,6 +54,7 @@ namespace EvaluateCost
 
             var lines = File.ReadAllLines(filename, Encoding.Default).ToList();
             var headersRus = lines.First();
+            string[] headersRu = GetSplitString(headersRus);
             lines.RemoveAt(0);
             string[] headersEn = ReadFile.GetEnHeaders(headersRus, headRuEn);
 
@@ -62,7 +63,7 @@ namespace EvaluateCost
                 Type type = TypeObject.GetTypeObject(line, headersEn);
                 if (type != null)
                 {
-                    T obj = ReadFile.CreateType<T>(line, headersEn, type);
+                    T obj = ReadFile.CreateType<T>(line, headersEn, headersRu, type);
                     obj.GetTypeObject = TypeObject.GetTypeObject;
                     listT.Add(obj);
                 }
@@ -81,7 +82,28 @@ namespace EvaluateCost
             else
                 return null;
         }
-        public static T CreateType<T>(string line, string[] headersEn, Type type)
+
+        private static void SetNullableValue(object obj, PropertyInfo prop, string sprop)
+        {
+            if (!string.IsNullOrEmpty(sprop))
+            {
+                double? dprop = GetPercentFromString(sprop);
+
+                if (dprop != null)
+                    prop.SetValue(obj, dprop);
+                else
+                    prop.SetValue(obj, Convert.ChangeType(sprop, prop.PropertyType));
+            }
+            else
+            {
+                double? propValue = (double?)prop.GetValue(obj);
+
+                if ((propValue == null) || (propValue.Value == 0))
+                    prop.SetValue(obj, null);
+            }            
+        }
+
+        public static T CreateType<T>(string line, string[] headersEn, string[] headersRu, Type type)
         {
             string[] lines = GetSplitString(line);
             T obj = (T)Activator.CreateInstance(type);
@@ -99,21 +121,58 @@ namespace EvaluateCost
                         {
                             Enum eprop = TypeObject.GetTypeObject(sprop);
                             prop.SetValue(obj, Convert.ChangeType(eprop, prop.PropertyType));
+<<<<<<< HEAD
                             //break;
+=======
+>>>>>>> propertyName
                         }
                         else if (Nullable.GetUnderlyingType(prop.PropertyType) != null)
                         {
-                            if (!string.IsNullOrEmpty(sprop))
-                            {
-                                double? dprop = GetPercentFromString(sprop);
+                            SetNullableValue(obj, prop, sprop);
+                        }
+                        else if (prop.PropertyType.IsGenericType)
+                        {
+                            List<PropertyInfo> listGenericProp = prop.PropertyType.GetTypeInfo().DeclaredProperties.ToList();
+                            Type generic = typeof(StringProperty<>);
+                            Type[] types = new Type[] { listGenericProp[0].PropertyType };
+                            Type curGenericType = generic.MakeGenericType(types);
 
-                                if (dprop != null)
-                                    prop.SetValue(obj, Convert.ChangeType(dprop, Nullable.GetUnderlyingType(prop.PropertyType)));
+                            dynamic createdGeneric = CreateType(curGenericType);
+                            dynamic needGenericType = Convert.ChangeType(createdGeneric, curGenericType);
+                            needGenericType.Name = headersRu[i].Trim();
+                            if (listGenericProp[0].PropertyType.IsEnum)
+                            {
+                                Enum eprop = TypeObject.GetTypeObject(sprop);
+                                needGenericType.Value = eprop;
+                                prop.SetValue(obj, needGenericType);
+                            }
+                            else if (Nullable.GetUnderlyingType(listGenericProp[0].PropertyType) != null)
+                            {
+                                if (!string.IsNullOrEmpty(sprop))
+                                {
+                                    double? dprop = GetPercentFromString(sprop);
+
+                                    if (dprop != null)
+                                        needGenericType.Value = dprop;
+                                    else
+                                        needGenericType.Value = double.Parse(sprop);
+
+                                    prop.SetValue(obj, needGenericType);
+                                }
                                 else
-                                    prop.SetValue(obj, Convert.ChangeType(sprop, Nullable.GetUnderlyingType(prop.PropertyType)));
+                                {
+                                    dynamic propValue = prop.GetValue(obj);
+
+                                    if ((propValue == null) || (propValue.Value == 0))
+                                    {
+                                        needGenericType.Value = null;
+                                        prop.SetValue(obj, needGenericType);
+                                    }
+                                }                                
                             }
                             else
                             {
+<<<<<<< HEAD
                                 object propValue = prop.GetValue(obj);
 
                                 if ((propValue == null) || ((double)propValue == 0))
@@ -142,6 +201,16 @@ namespace EvaluateCost
                             //    prop.SetValue(obj, Convert.ChangeType(sprop, prop.PropertyType));
 
                             //break;
+=======
+                                needGenericType.Value = sprop;                                
+                                prop.SetValue(obj, needGenericType);
+                            }
+
+                        }
+                        else
+                        {
+                            prop.SetValue(obj, Convert.ChangeType(sprop, prop.PropertyType));
+>>>>>>> propertyName
                         }
                     }
                 }

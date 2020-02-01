@@ -14,15 +14,17 @@ namespace EvaluateCost
             { TypeProject.MainProject, new TypeName {SystemType = typeof(Project), Name = "Проект" } },
             { TypeProfitability.MainProfitability, new TypeName {SystemType = typeof(Profitability), Name = "Рентабельность" } },
             { TypeGroupCost.MainGroup, new TypeName {SystemType = typeof(GroupCost), Name = "Центр затрат" } },
-            { TypeCost.Material, new TypeName {SystemType = typeof(MaterialCost), Name = "ПКИ" } },
-            { TypeCost.Tax, new TypeName {SystemType = typeof(MaterialCost), Name = "Налог" } },
-            { TypeCost.Work, new TypeName {SystemType = typeof(CostWork), Name = "ФОТ" } },
-            { TypeCost.Other, new TypeName {SystemType = typeof(OtherCost), Name = "Прочее" } },
-            { TypeCost.Service, new TypeName {SystemType = typeof(ServiceCost), Name = "Услуги" } },
+            { TypeCost.Material, new TypeName {SystemType = typeof(CostMaterial), Name = "ПКИ" } },
+            { TypeCost.Tax, new TypeName {SystemType = typeof(CostMaterial), Name = "Налог" } },
+            { TypeCost.WorkOffice, new TypeName {SystemType = typeof(CostWorkOffice), Name = "ФОТ в офисе" } },
+            { TypeCost.WorkOnSite, new TypeName {SystemType = typeof(CostWorkOnSite), Name = "ФОТ на объекте" } },
+            { TypeCost.Other, new TypeName {SystemType = typeof(CostOther), Name = "Прочее" } },
+            { TypeCost.Service, new TypeName {SystemType = typeof(CostService), Name = "Услуги" } },
             { TypeCurrency.Rub, new TypeName {SystemType = typeof(CurrencyNameValue), Name = "рубль" } },
             { TypeCurrency.Usd, new TypeName {SystemType = typeof(CurrencyNameValue), Name = "доллар" } },
             { TypeCurrency.Eur, new TypeName {SystemType = typeof(CurrencyNameValue), Name = "евро" } }
-        };
+        };        
+
         public static Type GetTypeObject(string line, string[] headersEn)
         {
             string[] lines = ReadFile.GetSplitString(line);
@@ -78,10 +80,15 @@ namespace EvaluateCost
           { "Значение", "Value" },
           { "Рег. коэф.", "Koef" },
           { "Коэф. цены", "Koef" },
+          { "Коэф. участия", "Koef" },
+          { "Расчет", "isCalculate" },
           { "Файл затрат", "FileNameCost" },
           { "Файл рентабельность", "FileNameProf" },
           { "Папка проекта", "ProjectFolder" },
           { "Рентабельность", "Kprofitability" },
+          { "Длительность раб. дней", "Duration" },
+          { "Id", "Id" },
+          { "Заметка", "Note" },
           { "НДС", "CostTax" },
           { "Соц. налог", "SocialTax" }
         };
