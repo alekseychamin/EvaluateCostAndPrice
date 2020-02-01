@@ -64,7 +64,6 @@
     <Compile Include="Model\CostService.cs" />
     <Compile Include="Model\CostWorkOffice.cs" />
     <Compile Include="Model\CostWorkOnSite.cs" />
-    <Compile Include="Model\ICost.cs" />
     <Compile Include="Model\TaxWorkCost.cs" />
     <Compile Include="Types\TypeCurrency.cs" />
     <Compile Include="Types\TypeCost.cs" />
