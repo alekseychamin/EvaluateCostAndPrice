@@ -8,8 +8,23 @@ using System.Threading.Tasks;
 
 namespace EvaluateCost
 {
+    struct WorkerInfo
+    {
+        public string NameWorker;
+        public double MaxCount;
+        public double WorkHours;
+        public double MaxDuration;
+        public WorkerInfo(string nameWorker, double maxCount, double workHours, double maxDuration)
+        {
+            NameWorker = nameWorker;
+            MaxCount = maxCount;
+            WorkHours = workHours;
+            MaxDuration = maxDuration;
+        }
+    }
+
     class StringProperty<T>
-    {        
+    {
         public T Value { get; set; }
         public string Name { get; set; }
     }
@@ -56,6 +71,8 @@ namespace EvaluateCost
 
         // количество человек
         protected StringProperty<double?> countHuman = new StringProperty<double?>();
+
+        public string GroupCost { get; set; }
 
         public Values CostValues => cost;
         public Values PriceValues => price;
@@ -140,6 +157,7 @@ namespace EvaluateCost
         public StringProperty<double?> Koef { get => koef; set => koef = value; }
         public Func<Enum, string> GetTypeObject { get; set; }
         public double? Kprofitability { get; set; }
+        public string NameWorker { get; set; }
         public Dictionary<TypeCost, Values> CostValuesByType => costValuesByType;
         public Dictionary<TypeCost, Values> PriceValuesByType => priceValuesByType;
 
@@ -185,7 +203,7 @@ namespace EvaluateCost
 
             this.price.Tax = this.PriceValues.WithNoTax * this.CostTax;
             this.price.WithTax = this.PriceValues.WithNoTax + this.PriceValues.Tax;
-            this.price.Currency = this.Currency;            
+            this.price.Currency = this.Currency;
         }
 
         protected virtual void IsValidDoubleValue(double? value, String paramName)
@@ -225,7 +243,7 @@ namespace EvaluateCost
             {
                 value = new StringProperty<T>();
                 value.Value = default(T);
-            }            
+            }
         }
 
         public virtual double? AmountWork()
@@ -255,13 +273,13 @@ namespace EvaluateCost
                 cost.WithTax = count?.Value * unitTaxCost.Value * koef?.Value * countHuman?.Value;
                 cost.Tax = (cost.WithTax * costTax) / (1 + costTax);
                 cost.WithNoTax = cost.WithTax - cost.Tax;
-            }            
+            }
         }
 
         public void GetPriceValuesByType()
         {
             priceValuesByType.Add(this.TypeEnumObject, price);
-        }        
+        }
 
         public static string ShowCostValues(Values values)
         {
@@ -282,7 +300,7 @@ namespace EvaluateCost
             Cost otherCost = obj as Cost;
             if (otherCost == null) throw new ArgumentException("Obj не экземпляр класса Cost");
 
-            return this.id.CompareTo(otherCost.id);                
+            return this.id.CompareTo(otherCost.id);
         }
     }
 }

@@ -82,6 +82,10 @@ namespace EvaluateCost
         {
             List<Cost> listT = new List<Cost>();
             listT = ReadFile.GetObjects<Cost>(filename, Properties.Value);
+
+            foreach (var item in listT)
+                item.GroupCost = this.Name;
+                        
             listCost.AddRange(listT);
         }
 
@@ -140,21 +144,25 @@ namespace EvaluateCost
         public void GetPriceValuesByType()
         {
             priceValuesByType.Clear();
+            costValuesByType.Clear();
+            List<GroupCost> listGroupCost = new List<GroupCost>();
+            listGroupCost.Add(this);
 
-            foreach (var item in listCost)
-            {
-                if (priceValuesByType.ContainsKey(item.TypeEnumObject))
-                {
-                    Values cost = priceValuesByType[item.TypeEnumObject];
-                    cost.Tax += item.PriceValues.Tax;
-                    cost.WithNoTax += item.PriceValues.WithNoTax;
-                    cost.WithTax += item.PriceValues.WithTax;
-                    cost.Currency = item.Currency;
-                    priceValuesByType[item.TypeEnumObject] = cost;
-                }
-                else
-                    priceValuesByType.Add(item.TypeEnumObject, item.PriceValues);
-            }
+            Evaluate.GetValuesByType(listGroupCost, costValuesByType, priceValuesByType);
+            //foreach (var item in listCost)
+            //{
+            //    if (priceValuesByType.ContainsKey(item.TypeEnumObject))
+            //    {
+            //        Values cost = priceValuesByType[item.TypeEnumObject];
+            //        cost.Tax += item.PriceValues.Tax;
+            //        cost.WithNoTax += item.PriceValues.WithNoTax;
+            //        cost.WithTax += item.PriceValues.WithTax;
+            //        cost.Currency = item.Currency;
+            //        priceValuesByType[item.TypeEnumObject] = cost;
+            //    }
+            //    else
+            //        priceValuesByType.Add(item.TypeEnumObject, item.PriceValues);
+            //}
         }
 
         public void GetCostValues()
@@ -177,22 +185,12 @@ namespace EvaluateCost
 
         public void GetCostValuesByType()
         {
+            priceValuesByType.Clear();
             costValuesByType.Clear();
+            List<GroupCost> listGroupCost = new List<GroupCost>();
+            listGroupCost.Add(this);
 
-            foreach (var item in listCost)
-            {
-                if (costValuesByType.ContainsKey(item.TypeEnumObject))
-                {
-                    Values cost = costValuesByType[item.TypeEnumObject];
-                    cost.Tax += item.CostValues.Tax;
-                    cost.WithNoTax += item.CostValues.WithNoTax;
-                    cost.WithTax += item.CostValues.WithTax;
-                    cost.Currency = item.Currency;
-                    costValuesByType[item.TypeEnumObject] = cost;
-                }
-                else
-                    costValuesByType.Add(item.TypeEnumObject, item.CostValues);
-            }
+            Evaluate.GetValuesByType(listGroupCost, costValuesByType, priceValuesByType);            
         }
 
         public void EvaluateCost()

@@ -34,8 +34,17 @@ namespace EvaluateCost
             {
                 if (headersEn[i] != null && headersEn[i].Equals(propName[0].Name))
                 {
-                    Enum key = Value.First(x => x.Value.Name == lines[i].Trim()).Key;
-                    return Value[key].SystemType;
+                    try
+                    {
+                        Enum key = Value.First(x => x.Value.Name == lines[i].Trim()).Key;
+                        return Value[key].SystemType;
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine(line);
+                        throw;
+                    }
+                    
                 }                    
             }
             return null;
@@ -76,6 +85,7 @@ namespace EvaluateCost
           { "Кол-во часов", "Count" },
           { "Кол-во дней", "Count" },
           { "Часть системы", "PartSystem" },
+          { "Специалист", "NameWorker" },
           { "Комментарий", "Comment" },
           { "Значение", "Value" },
           { "Рег. коэф.", "Koef" },

@@ -23,6 +23,20 @@ namespace EvaluateCost
                                                                     new Dictionary<string, Dictionary<TypeCost, Values>>();
         private Dictionary<string, Values> costValuesByComment = new Dictionary<string, Values>();
         private Dictionary<string, Values> priceValuesByComment = new Dictionary<string, Values>();
+        private Dictionary<string, Dictionary<string, Values>> costValuesByCommentPartSystem = 
+                                                                new Dictionary<string, Dictionary<string, Values>>();
+        private Dictionary<string, Dictionary<string, Values>> priceValuesByCommentPartSystem =
+                                                                new Dictionary<string, Dictionary<string, Values>>();
+        private Dictionary<string, Dictionary<TypeCost, Values>> costValuesByPartSystemTypeCost =
+                                                                new Dictionary<string, Dictionary<TypeCost, Values>>();
+        private Dictionary<string, Dictionary<TypeCost, Values>> priceValuesByPartSystemTypeCost =
+                                                                new Dictionary<string, Dictionary<TypeCost, Values>>();
+
+        private Dictionary<string, Values> costValuesByPartSystem = new Dictionary<string, Values>();
+        private Dictionary<string, Values> priceValuesByPartSystem = new Dictionary<string, Values>();
+        private Dictionary<string, Dictionary<TypeCost, List<WorkerInfo>>> workerInfoByCommentTypeCost =
+                                new Dictionary<string, Dictionary<TypeCost, List<WorkerInfo>>>();
+        private List<WorkerInfo> workerInfoByProject = new List<WorkerInfo>();
         private Report report;
 
         private StringProperty<double?> duration = new StringProperty<double?>();
@@ -48,6 +62,18 @@ namespace EvaluateCost
         public Dictionary<string, Dictionary<TypeCost, Values>> PriceValuesByCommentType { get => priceValuesByCommentType; }
         public Dictionary<string, Values> CostValuesByComment { get => costValuesByComment; }
         public Dictionary<string, Values> PriceValuesByComment { get => priceValuesByComment; }
+        public Dictionary<string, Dictionary<string, Values>> CostValuesByCommentPartSystem { get => costValuesByCommentPartSystem; }
+        public Dictionary<string, Dictionary<string, Values>> PriceValuesByCommentPartSystem { get => priceValuesByCommentPartSystem; }
+        public Dictionary<string, Dictionary<TypeCost, Values>> CostValuesByPartSystemTypeCost { get => costValuesByPartSystemTypeCost; }
+        public Dictionary<string, Dictionary<TypeCost, Values>> PriceValuesByPartSystemTypeCost { get => priceValuesByPartSystemTypeCost; }
+
+        public Dictionary<string, Values> CostValuesByPartSystem { get => costValuesByPartSystem; }
+        public Dictionary<string, Values> PriceValuesByPartSystem { get => priceValuesByPartSystem; }
+
+        public Dictionary<string, Dictionary<TypeCost, List<WorkerInfo>>> 
+                                                WorkerInfoByCommentTypeCost { get => workerInfoByCommentTypeCost; }
+
+        public List<WorkerInfo> WorkerInfoByProject { get => workerInfoByProject; }
         public Report Report { get => report; }
 
         public double? CostTax
@@ -217,123 +243,71 @@ namespace EvaluateCost
             }
         }
 
-        private void AddValues(Dictionary<string, Dictionary<TypeCost, Values>> valuesByCommentType,                               
-                               Values costValues, Cost cost, TypeCurrency currency)
+        private void GetWorkerInfoByCommentTypeCost()
         {
-            if (valuesByCommentType.ContainsKey(cost.Comment.Value))
-            {
-                if (valuesByCommentType[cost.Comment.Value].ContainsKey(cost.TypeEnumObject))
-                {
-                    Values values = valuesByCommentType[cost.Comment.Value][cost.TypeEnumObject];
-                    values.WithNoTax += costValues.WithNoTax;
-                    values.WithTax += costValues.WithTax;
-                    values.Tax += costValues.Tax;                    
-                    values.Currency = currency;
-                    valuesByCommentType[cost.Comment.Value][cost.TypeEnumObject] = values;
-                }
-                else
-                {
-                    Values values = costValues;
-                    values.Currency = currency;
-                    valuesByCommentType[cost.Comment.Value].Add(cost.TypeEnumObject, values);
-                }
-            }
-            else
-            {
-                Values values = costValues;
-                values.Currency = currency;
-                valuesByCommentType.Add(cost.Comment.Value, new Dictionary<TypeCost, Values>());
-                valuesByCommentType[cost.Comment.Value].Add(cost.TypeEnumObject, values);
-            }           
+            workerInfoByCommentTypeCost.Clear();
+            Evaluate.GetWorkerInfoByCommetTypeCost(listNameGroupCost, workerInfoByCommentTypeCost);
+        }
+        private void GetCostPriceValuesByPartSystem()
+        {
+            costValuesByPartSystem.Clear();
+            priceValuesByPartSystem.Clear();
+            Evaluate.GetValuesByPartSystem(listNameGroupCost, costValuesByPartSystem, priceValuesByPartSystem);
         }
 
+        private void GetCostPriceValuesByPartSystemTypeCost()
+        {
+            costValuesByPartSystemTypeCost.Clear();
+            priceValuesByPartSystemTypeCost.Clear();
+            Evaluate.GetValuesByPartSystemTypeCost(listNameGroupCost, costValuesByPartSystemTypeCost,
+                                                   priceValuesByPartSystemTypeCost);
+        }
+
+        private void GetCostPriceValuesByCommentPartSystem()
+        {
+            costValuesByCommentPartSystem.Clear();
+            priceValuesByCommentPartSystem.Clear();
+            Evaluate.GetValuesByCommentPartSystem(listNameGroupCost, costValuesByCommentPartSystem, 
+                                                  priceValuesByCommentPartSystem);
+        }
         private void GetCostPriceValuesByCommentType()
         {            
-            foreach (var group in listNameGroupCost)
-            {
-                foreach (var cost in group.ListCost)
-                {
-                    AddValues(costValuesByCommentType, cost.CostValues, cost, group.Currency);
-                    AddValues(priceValuesByCommentType, cost.PriceValues, cost, group.Currency);
-                }
-            }
+            costValuesByCommentType.Clear();
+            priceValuesByCommentType.Clear();
+            Evaluate.GetValuesByCommentTypeCost(listNameGroupCost, costValuesByCommentType, priceValuesByCommentType);
         }
 
-        private void GetValuesByComment(Dictionary<string, Values> valuesComment, 
-                                        Dictionary<string, Dictionary<TypeCost, Values>> valuesCommentType)
+        private void GetValuesByComment(Dictionary<string, Values> costValuesByComment,
+                                        Dictionary<string, Values> priceValuesByComment)
         {
-            foreach (var keyName in valuesCommentType.Keys)
-            {
-                Values values;
-                values.WithNoTax = 0;
-                values.WithTax = 0;
-                values.Tax = 0;
-                values.Currency = TypeCurrency.None;                
-                foreach (var keyType in valuesCommentType[keyName].Keys)
-                {
-                    values.Currency = valuesCommentType[keyName][keyType].Currency;
-                    values.WithNoTax += valuesCommentType[keyName][keyType].WithNoTax;
-                    values.WithTax += valuesCommentType[keyName][keyType].WithTax;
-                    values.Tax += valuesCommentType[keyName][keyType].Tax;                    
-                }
-                valuesComment.Add(keyName, values);
-            }
+            costValuesByComment.Clear();
+            priceValuesByComment.Clear();
+            Evaluate.GetValuesByComment(listNameGroupCost, costValuesByComment, priceValuesByComment);            
         }
         public void GetCostPriceValuesByComment()
         {
             GetCostPriceValuesByCommentType();
-            GetValuesByComment(costValuesByComment, costValuesByCommentType);
-            GetValuesByComment(priceValuesByComment, priceValuesByCommentType);
+            GetCostPriceValuesByPartSystem();
+            GetCostPriceValuesByCommentPartSystem();
+            GetCostPriceValuesByPartSystemTypeCost();
+            GetValuesByComment(costValuesByComment, priceValuesByComment);
+
+            GetWorkerInfoByCommentTypeCost();
         }
 
         public void GetPriceValuesByType()
         {
             priceValuesByType.Clear();
-
-            foreach (var group in listNameGroupCost)
-                group.GetPriceValuesByType();
-
-            foreach (var group in listNameGroupCost)
-            {
-                foreach (var item in group.PriceValuesByType)
-                {
-                    if (priceValuesByType.ContainsKey(item.Key))
-                    {
-                        Values price = priceValuesByType[item.Key];
-                        price.Tax += item.Value.Tax;
-                        price.WithNoTax += item.Value.WithNoTax;
-                        price.WithTax += item.Value.WithTax;                       
-                        priceValuesByType[item.Key] = price;
-                    }
-                    else
-                        priceValuesByType.Add(item.Key, item.Value);
-                }
-            }
+            costValuesByType.Clear();
+            Evaluate.GetValuesByType(listNameGroupCost, costValuesByType, priceValuesByType);            
         }        
 
         public void GetCostValuesByType()
         {
             costValuesByType.Clear();
-
-            foreach (var group in listNameGroupCost)
-                group.GetCostValuesByType();
-
-            foreach (var group in listNameGroupCost)
-            {
-                foreach (var item in group.CostValuesByType)
-                {
-                    if (costValuesByType.ContainsKey(item.Key))
-                    {
-                        Values cost = costValuesByType[item.Key];
-                        cost.Tax += item.Value.Tax;
-                        cost.WithNoTax += item.Value.WithNoTax;
-                        cost.WithTax += item.Value.WithTax;                        
-                        costValuesByType[item.Key] = cost;
-                    }
-                    else
-                        costValuesByType.Add(item.Key, item.Value);
-                }
-            }            
+            priceValuesByComment.Clear();
+            Evaluate.GetValuesByType(listNameGroupCost, costValuesByType, priceValuesByType);
+            
         }                                               
 
         public void SetTax()

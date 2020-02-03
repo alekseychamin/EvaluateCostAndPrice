@@ -24,7 +24,7 @@ namespace EvaluateCost
         {
             if (taxWorkCost == null)
             {
-                CostTaxWork taxWC = new CostTaxWork(this);
+                CostTaxWork taxWC = new CostTaxWork(this);                
                 taxWorkCost = taxWC;
                 return taxWC;
             }

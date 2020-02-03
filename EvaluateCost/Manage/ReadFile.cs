@@ -48,11 +48,28 @@ namespace EvaluateCost
             }
             return output;
         }
+
+        private static List<string> ReadAllLinesInFile(string path, Encoding encoding)
+        {
+            List<string> listS = new List<string>();
+
+            using (var csv = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var sr = new StreamReader(csv, encoding))
+            {
+                while (!sr.EndOfStream)
+                {
+                    listS.Add(sr.ReadLine());
+                }
+            }
+
+            return listS;
+        }
         public static List<T> GetObjects<T>(string filename, Dictionary<string, string> headRuEn) where T : IGetTypeObject
         {
             List<T> listT = new List<T>();
 
-            var lines = File.ReadAllLines(filename, Encoding.Default).ToList();
+            //var lines = File.ReadAllLines(filename, Encoding.Default).ToList();
+            var lines = ReadAllLinesInFile(filename, Encoding.Default);
             var headersRus = lines.First();
             string[] headersRu = GetSplitString(headersRus);
             lines.RemoveAt(0);
@@ -100,7 +117,7 @@ namespace EvaluateCost
 
                 if ((propValue == null) || (propValue.Value == 0))
                     prop.SetValue(obj, null);
-            }            
+            }
         }
 
         public static T CreateType<T>(string line, string[] headersEn, string[] headersRu, Type type)
@@ -164,11 +181,11 @@ namespace EvaluateCost
                                         needGenericType.Value = null;
                                         prop.SetValue(obj, needGenericType);
                                     }
-                                }                                
+                                }
                             }
                             else
                             {
-                                needGenericType.Value = sprop;                                
+                                needGenericType.Value = sprop;
                                 prop.SetValue(obj, needGenericType);
                             }
 

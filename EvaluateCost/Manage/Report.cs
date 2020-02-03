@@ -85,11 +85,32 @@ namespace EvaluateCost
                     }
                 }
             }
+
+            string wInfо = string.Empty;
+            if (project.WorkerInfoByCommentTypeCost.Count != 0)
+            {
+                List<WorkerInfo> workerInfo = project.WorkerInfoByCommentTypeCost[comment][typeCost];
+
+                double countAll = workerInfo.Sum(t => t.MaxCount);
+                double workHoursAll = workerInfo.Sum(t => t.WorkHours);
+                wInfо += string.Format($"Общее кол-во специалистов: {countAll} чел.\n");
+                int i = 1;
+                foreach (var item in workerInfo)
+                {
+                    wInfо += string.Format($"{i}. {item.NameWorker} - {item.MaxCount} чел.\n" +
+                                           $"Трудозатраты: {item.WorkHours} ч, Длительность работ: {item.MaxDuration} д\n");
+                    i++;
+                }
+            }
+            string name = project.Duration.Name ?? "Длительность раб. дней";
             string reportWork = string.Format($"Выполнение работ со следующими условиями: \n" +
+                                              $"{name}: {Evaluate.GetDuration(project, comment, typeCost).Value}\n" +  
                                               $"{costFilter?.Count.Name}: {amountWork}\n");
             if (!string.IsNullOrEmpty(costFilter.Koef.Name))
                 reportWork += string.Format($"{costFilter.Koef.Name}: {costFilter.Koef.Value}\n");
-            reportWork += string.Format($"{costFilter.CountHuman.Name}: {countHuman}");            
+            //reportWork += string.Format($"{costFilter.CountHuman.Name}: {countHuman}");            
+            reportWork += "\n";
+            reportWork += wInfо;
 
             result.ReportWorkAmount = reportWork;
             return result;
@@ -200,8 +221,7 @@ namespace EvaluateCost
                     if (!string.IsNullOrEmpty(rep.Item2)) st.AppendLine($"Заметка: {rep.Item2}");                    
                     st.AppendLine(rep.Item1);
                     //if (keyType == TypeCost.WorkOnSite) st.AppendLine();
-                    string name = project.Duration.Name ?? "Длительность раб. дней";
-                    st.AppendLine($"{name}: {Evaluate.GetDuration(project, keyName, keyType).Value}\n");
+                   
                 }
                 else
                 {                    
@@ -329,6 +349,7 @@ namespace EvaluateCost
                 i++;
             }
 
+                        
             reportAllProject.AppendLine(new string('#', 50));
             reportAllProject.AppendLine("###### Группировка по комментариям затрат ######");
             reportAllProject.AppendLine(new string('#', 50));
@@ -338,10 +359,21 @@ namespace EvaluateCost
             {
                 values = GetValues(project.CostValuesByComment, keyName);
                 reportAllProject.AppendLine($"###### {keyName} ######");
-                reportAllProject.AppendLine(Cost.ShowCostValues(values));
+                reportAllProject.AppendLine(Cost.ShowCostValues(values));                
 
                 values = GetValues(project.PriceValuesByComment, keyName);
                 reportAllProject.AppendLine(Cost.ShowPriceValues(values));
+
+                i = 1;
+                foreach (var partSystem in project.CostValuesByCommentPartSystem[keyName].Keys)
+                {
+                    values = GetValues(project.CostValuesByCommentPartSystem[keyName], partSystem);
+                    reportAllProject.AppendLine($"###### {i} {partSystem} ######");
+                    reportAllProject.AppendLine(Cost.ShowCostValues(values));
+                    i++;
+                    values = GetValues(project.PriceValuesByCommentPartSystem[keyName], partSystem);
+                    reportAllProject.AppendLine(Cost.ShowPriceValues(values));
+                }
 
                 //foreach (var keyType in costValuesByCommentType[keyName].Keys)
                 //{
@@ -353,6 +385,33 @@ namespace EvaluateCost
                 //    reportAllProject.AppendLine(Cost.ShowPriceValues(values));
                 //}
             }
+
+            reportAllProject.AppendLine(new string('#', 50));
+            reportAllProject.AppendLine("###### Группировка по частям системы ######");
+            reportAllProject.AppendLine(new string('#', 50));
+            reportAllProject.AppendLine();
+
+            foreach (var keyName in project.CostValuesByPartSystemTypeCost.Keys)
+            {
+                values = GetValues(project.CostValuesByPartSystem, keyName);
+                reportAllProject.AppendLine($"###### {keyName} ######");
+                reportAllProject.AppendLine(Cost.ShowCostValues(values));
+
+                values = GetValues(project.PriceValuesByPartSystem, keyName);
+                reportAllProject.AppendLine(Cost.ShowPriceValues(values));
+
+                i = 1;
+                foreach (var typeCost in project.CostValuesByPartSystemTypeCost[keyName].Keys)
+                {
+                    values = GetValues(project.CostValuesByPartSystemTypeCost[keyName], typeCost);
+                    reportAllProject.AppendLine($"###### {i} {TypeObject.GetTypeObject(typeCost)} ######");
+                    reportAllProject.AppendLine(Cost.ShowCostValues(values));
+                    i++;
+                    values = GetValues(project.PriceValuesByPartSystemTypeCost[keyName], typeCost);
+                    reportAllProject.AppendLine(Cost.ShowPriceValues(values));
+                }                
+            }
+
             listReport.Add(reportAllProject);
         }
 

@@ -50,6 +50,7 @@ namespace EvaluateCost
             this.TypeEnumObject = TypeCost.Tax;
             this.socialTax = wCost.SocialTax;
             this.id = wCost.Id;
+            this.GroupCost = wCost.GroupCost;
             //this.Currency = wCost.Currency;
             //this.Name = "Налог на " + wCost.Name;
             //this.Comment = wCost.Comment;

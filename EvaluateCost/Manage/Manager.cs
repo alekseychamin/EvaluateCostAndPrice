@@ -77,12 +77,7 @@ namespace EvaluateCost
         }
 
         public void LoadProject(string filename)
-        {
-            //listProject.Clear();
-
-            //List<Project> listT = new List<Project>();
-            //listT = ReadFile.GetObjects<Project>(filename, Properties.Value);
-            //listProject.AddRange(listT);
+        {            
             ReadFile.Load<Project>(filename, listProject);
             RemoveProject();
             LoadProjectGroupCost();            
